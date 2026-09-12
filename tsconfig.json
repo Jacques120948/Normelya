@@ -5,7 +5,13 @@
       "path": "./packages/core"
     },
     {
+      "path": "./packages/regulatory-sources"
+    },
+    {
       "path": "./packages/sds-extraction"
+    },
+    {
+      "path": "./packages/sds-document"
     }
   ]
 }

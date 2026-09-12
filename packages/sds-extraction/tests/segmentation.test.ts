@@ -109,3 +109,27 @@ describe('sous-rubriques', () => {
     expect(sousRubriques[0]?.body).toContain('9.1 Aspect')
   })
 })
+
+describe('robustesse typographique des en-têtes', () => {
+  it('reconnaît le tiret cadratin employé par les textes officiels', () => {
+    // Non-régression : le règlement écrit « RUBRIQUE 1 — Identification ».
+    // Sans normalisation, aucun en-tête n'était reconnu.
+    const resultat = segmentSections(
+      'RUBRIQUE 1 — Identification de la substance\nContenu\nRUBRIQUE 2 — Identification des dangers\nAutre',
+    )
+    expect(resultat.sections.get(1)?.heading).toBe('Identification de la substance')
+    expect(resultat.sections.get(2)?.heading).toBe('Identification des dangers')
+  })
+
+  it('reconnaît indifféremment les séparateurs employés par les fournisseurs', () => {
+    for (const separateur of [':', '-', '–', '—', '.', '']) {
+      const resultat = segmentSections(`RUBRIQUE 3 ${separateur} Composition\nContenu`)
+      expect(resultat.sections.get(3)?.heading, separateur).toBe('Composition')
+    }
+  })
+
+  it('tolère les espaces insécables autour du numéro', () => {
+    const resultat = segmentSections('RUBRIQUE 3 : Composition\nContenu')
+    expect(resultat.sections.get(3)?.heading).toBe('Composition')
+  })
+})

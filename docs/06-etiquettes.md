@@ -10,10 +10,18 @@ Les deux sont horodatés, versionnés, et citent la version exacte de la FDS
 fournisseur utilisée ainsi que la version du moteur. Les deux exigent une
 attestation de validation humaine préalable (voir § 6.8).
 
-> La structure détaillée de la fiche de données de sécurité du produit dilué —
-> l'ordre des seize rubriques, les sous-rubriques obligatoires et les mentions
-> exigées — doit être établie sur le texte officiel avant implémentation :
-> **`REGULATORY_REVIEW_REQUIRED`**. Le gabarit ne sera pas écrit de mémoire.
+> **Structure établie.** L'ordre des seize rubriques et leurs sous-rubriques ont
+> été relevés dans le texte officiel : règlement (CE) n° 1907/2006, annexe II,
+> partie B, version consolidée du 22 juin 2026, exemplaire conservé dans
+> `sources-reglementaires/`. Ils sont codés dans `packages/sds-document`, avec
+> leur source et leur référence, et **vérifiés par un test qui relit le règlement
+> lui-même** : la structure ne peut pas diverger du texte sans que la suite
+> échoue.
+>
+> En revanche, le **contenu** de chaque rubrique — ce qu'il faut y déclarer, à
+> partir de quel seuil, sous quelle forme — reste soumis aux règles du moteur et
+> à validation humaine préalable. La structure est une lecture de source ; le
+> contenu est une règle.
 
 ## 6.0 Étiquette CLP
 

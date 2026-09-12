@@ -14,6 +14,8 @@
  * correctement quelle que soit la formulation employée.
  */
 
+import { normalizeTypography } from './normalize'
+
 export const SDS_SECTION_COUNT = 16
 
 /** Mots introduisant une rubrique, dans les langues couvertes par le corpus. */
@@ -57,8 +59,12 @@ type EnTete = { number: number; heading: string; line: number; mot: string | nul
  * Robustesse recherchée : un fournisseur qui écrit « SECTION 3 » et un autre
  * « 3. COMPOSITION » doivent produire le même découpage.
  */
-export function segmentSections(texte: string): SegmentationResult {
-  const lignes = texte.split(/\r?\n/)
+export function segmentSections(texteBrut: string): SegmentationResult {
+  // Les tirets cadratin et demi-cadratin, les espaces insécables et les
+  // apostrophes courbes sont ramenés à leur forme saisissable. Le texte
+  // officiel du règlement écrit « RUBRIQUE 1 — Identification » : sans cette
+  // étape, aucun en-tête n'est reconnu.
+  const lignes = normalizeTypography(texteBrut).split(/\r?\n/)
   const enTetes = releverEnTetes(lignes)
   const sections = new Map<number, SdsSection>()
 
