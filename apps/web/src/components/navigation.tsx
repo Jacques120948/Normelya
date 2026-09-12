@@ -114,6 +114,18 @@ export function BarreLaterale({
               {fr.actions.seDeconnecter}
             </button>
           </form>
+
+          <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 px-3 text-xs text-[var(--color-ink-300)]">
+            <Link href="/mentions-legales" className="hover:underline">
+              Mentions légales
+            </Link>
+            <Link href="/cgu" className="hover:underline">
+              CGU
+            </Link>
+            <Link href="/confidentialite" className="hover:underline">
+              Confidentialité
+            </Link>
+          </div>
         </div>
       </nav>
     </>

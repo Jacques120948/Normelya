@@ -68,6 +68,7 @@ npm run dev
 | `npm run test:coverage` | Couverture |
 | `npm run db:migrate` | Application des migrations |
 | `npm run verifier:secrets` | Contrôle qu'aucun secret ne fuit côté client |
+| `npm run verifier:vocabulaire` | Contrôle qu'aucun terme interdit n'atteint l'utilisateur |
 | `npm run check` | Tout ce qui précède, comme en intégration continue |
 
 ### Tests d'intégration base de données
@@ -79,6 +80,24 @@ PostgreSQL. Sans la variable `TEST_DATABASE_URL`, ils sont ignorés :
 TEST_DATABASE_URL=postgres://postgres@localhost:5432/postgres npm test
 ```
 
+## Confidentialité des formulations
+
+Aucun appel à un modèle de langage ne reçoit une recette, une formulation ou un
+pourcentage client. Un modèle ne voit que des documents **fournisseurs** — des
+fiches qui circulent déjà entre le fournisseur et tous ses clients.
+
+Cette séparation est appliquée par le code, pas par une convention :
+
+- un **type marqué** (`SupplierDocumentText`) que seule `fromSupplierDocument()`
+  peut construire ; une chaîne ordinaire ne compile pas ;
+- des **contrôles d'exécution** avant chaque sortie réseau : forme du document,
+  absence de marqueur de formulation, antériorité d'une lecture déterministe ;
+- une **règle de lint** interdisant d'importer un client de modèle hors de
+  `apps/web/src/server/ai/`.
+
+L'analyse déterministe du PDF est la méthode principale. Le modèle n'est qu'un
+recours, et la méthode employée est journalisée pour chaque document.
+
 ## Sécurité
 
 - Isolation par organisation garantie à deux niveaux : filtrage applicatif **et**
@@ -89,6 +108,9 @@ TEST_DATABASE_URL=postgres://postgres@localhost:5432/postgres npm test
   courte durée.
 - Toute entrée validée côté serveur, limitation de débit sur les points sensibles.
 - Aucun secret côté client, vérifié automatiquement en intégration continue.
+- Validation humaine enregistrée en append-only avant toute génération de
+  document : utilisateur, horodatage, empreinte des données validées, version du
+  moteur.
 
 ## Avertissement
 

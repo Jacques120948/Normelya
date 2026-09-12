@@ -32,16 +32,21 @@ une FDS change.
 ## 1.3 Ce que Normelya fait
 
 ```
-IMPORTER  →  VÉRIFIER  →  CRÉER LA RECETTE  →  ANALYSER  →  ÉTIQUETER  →  ARCHIVER
+IMPORTER  →  VÉRIFIER  →  CRÉER LA RECETTE  →  ANALYSER  →  DOCUMENTS  →  ARCHIVER
 ```
+
+À l'issue de l'analyse, Normelya produit **deux documents** par produit :
+l'étiquette CLP et la fiche de données de sécurité du produit dilué. Les deux
+sont horodatés, versionnés, et citent la version exacte de la FDS fournisseur
+utilisée.
 
 1. **Importer** — l'utilisateur dépose la FDS PDF de son parfum ou de sa cire.
 2. **Vérifier** — Normelya propose une lecture structurée du document ; l'utilisateur
    corrige et **valide explicitement**. Rien n'est réputé exact avant cette validation.
 3. **Créer la recette** — pourcentages par matière première, total contrôlé à 100 %.
 4. **Analyser** — le moteur déterministe calcule à partir des données validées.
-5. **Étiqueter** — génération d'une étiquette au format choisi, sans suppression
-   automatique d'une mention réglementaire.
+5. **Documenter** — génération de l'étiquette et de la FDS du produit dilué,
+   sans suppression automatique d'une mention réglementaire.
 6. **Archiver** — chaque analyse fige la recette, les versions de FDS utilisées,
    la version du moteur, la date, l'utilisateur.
 
@@ -50,8 +55,9 @@ IMPORTER  →  VÉRIFIER  →  CRÉER LA RECETTE  →  ANALYSER  →  ÉTIQUETER
 - Ce n'est pas un cabinet de conseil réglementaire ni un toxicologue.
 - Ce n'est pas un service de déclaration : Normelya prépare et explique les
   démarches, il ne les effectue pas à la place de l'utilisateur.
-- Ce n'est pas un générateur de FDS. Normelya **lit** des FDS fournisseurs ;
-  produire une FDS pour un produit fini est un acte d'expertise hors périmètre V1.
+- Ce n'est pas un cabinet d'expertise. Normelya lit les FDS fournisseurs et
+  produit la FDS du produit dilué à partir de ces données validées ; il ne se
+  substitue pas à une expertise toxicologique lorsque celle-ci est requise.
 - Ce n'est pas une IA qui « décide » de la conformité. Voir § 1.6.
 
 ## 1.5 Cible
@@ -99,10 +105,13 @@ Normelya n'emploie pas le mot « conforme » comme résultat d'un calcul.
 
 | Plan | Prix | Contenu |
 |------|------|---------|
-| Gratuit | 0 € | 3 produits, parcours complet pour évaluer réellement l'outil |
-| Essentiel | 9,90 €/mois | 10 produits actifs, FDS, analyse, CLP, étiquettes, historique |
-| Pro | 19,90 €/mois | Produits illimités, UFI, documents, exports, historique complet, assistant |
-| Atelier | 29,90 €/mois | Pro + lots, traçabilité, coûts de revient, multi-utilisateurs |
+| Gratuit | 0 € | 3 produits documentés, quota **non renouvelable**, parcours complet |
+| Essentiel | 9 €/mois | 15 produits actifs, FDS, analyse, CLP, étiquettes, historique |
+| Pro | 15 €/mois | Produits illimités, FDS du produit dilué, CLP, UFI, archivage, exports, assistant |
+| Atelier | 25 €/mois | Pro + lots, traçabilité, coûts de revient, multi-utilisateurs |
+
+Sur l'offre gratuite, archiver un produit ne libère pas de place : les trois
+produits se comptent sur la durée de vie du compte, pas à un instant donné.
 
 Annuel : ~2 mois offerts. **Toutes les limites sont appliquées côté serveur**,
 jamais uniquement dans l'interface.

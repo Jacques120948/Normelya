@@ -175,8 +175,8 @@ export default async function Page({
 /**
  * Statut affiché pour un produit.
  *
- * Un produit sans analyse n'est pas « conforme par défaut » : il demande une
- * vérification. Aucun statut favorable n'est attribué en l'absence de calcul.
+ * Un produit sans analyse demande une vérification. Aucun statut favorable
+ * n'est attribué en l'absence de calcul.
  */
 function statutProduit(statut: string | null): NormelyaStatus {
   if (statut && statut in STATUS_PRESENTATION) return statut as NormelyaStatus

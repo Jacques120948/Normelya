@@ -4,6 +4,27 @@ Aucune fonctionnalité, aucun texte, aucun visuel d'un concurrent n'est repris.
 La différenciation recherchée n'est pas « plus de fonctions », mais **une
 position produit différente**.
 
+## 13.0 Parité fonctionnelle, puis écart
+
+L'analyse de marché montre que la solution de référence sur ce créneau calcule la
+dilution à un taux libre et produit la fiche du produit dilué ainsi que
+l'étiquette. Normelya doit atteindre ce niveau avant de prétendre différer de
+quoi que ce soit.
+
+**Parité attendue** : taux de parfum saisi librement dans un champ numérique,
+calcul sur le mélange final complet, étiquette CLP et fiche de données de
+sécurité du produit dilué.
+
+**Écart recherché**, sur quatre terrains que la solution de référence ne couvre
+pas ou couvre peu :
+
+| Terrain | Position de Normelya |
+|---------|----------------------|
+| Marché suisse | Module distinct, sans constante partagée avec le module européen. La solution de référence exclut explicitement les marchés hors France |
+| Matières premières | Un référentiel d'atelier, pas seulement un calcul ponctuel |
+| Archivage | Chaque document conserve ses sources, sa version de moteur et son attestation de validation |
+| Confidentialité | Aucune formulation client ne quitte l'infrastructure, garanti par le code |
+
 ## 13.1 Les cinq axes
 
 ### 1. La traçabilité comme fonctionnalité visible
@@ -39,18 +60,29 @@ que trois mois plus tard son fournisseur publie une nouvelle FDS et qu'il ne le
 sait pas. Le centre de conformité, les alertes de version, le rejeu comparatif
 entre versions de moteur et l'historique complet traitent ce problème-là.
 
-### 5. Le mode sans IA et la portabilité des données
+### 5. La confidentialité des formulations, garantie par le code
 
-Une organisation peut désactiver totalement l'IA : ses formules ne quittent alors
-jamais l'infrastructure Normelya. Et l'export complet des données est disponible
-dans tous les plans, y compris le gratuit. Un artisan qui craint d'être prisonnier
-d'un outil a une réponse écrite.
+Aucun appel à un modèle de langage ne reçoit une recette, une formulation ou un
+pourcentage client. Ce n'est pas une promesse commerciale : c'est un type marqué
+que le compilateur fait respecter, un contrôle d'exécution avant chaque sortie
+réseau, et une règle de lint qui échoue le build.
+
+Un modèle ne voit que des documents fournisseurs — des fiches qui circulent déjà
+entre le fournisseur et tous ses clients. La recette de l'artisan, jamais.
+
+Une organisation peut en outre désactiver toute assistance par IA. Et l'export
+complet des données est disponible dans tous les plans, y compris le gratuit. Un
+artisan qui craint d'être prisonnier d'un outil, ou de voir sa formule servir à
+entraîner un modèle, a une réponse vérifiable.
 
 ## 13.2 Différenciations secondaires
 
 | Axe | Contenu |
 |-----|---------|
 | Français et suisse dès le départ | Deux marchés traités séparément, pas un marché principal et un « aussi » |
+| Taux de parfum libre | Champ numérique, jamais une liste de valeurs prédéfinies |
+| Recettes à plusieurs parfums | Le calcul porte sur le mélange final, deux parfums apportant la même substance s'additionnent |
+| Avertissement de proximité de seuil | L'artisan sait quand un demi-point de parfum changerait son étiquette |
 | Interface non technique | Aucun écran n'exige de comprendre la réglementation pour avancer |
 | Gratuit réellement utilisable | 3 produits complets, pas une démonstration bridée |
 | Coût de revient intégré | Le même outil répond à « est-ce vendable ? » et « est-ce rentable ? » |

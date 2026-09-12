@@ -1,4 +1,21 @@
-# 06 — Stratégie de génération des étiquettes
+# 06 — Stratégie de génération des documents
+
+Normelya produit **deux documents par produit** :
+
+1. **l'étiquette CLP** ;
+2. **la fiche de données de sécurité du produit dilué**, au format défini par
+   l'annexe II du règlement REACH tel que modifié par le règlement (UE) 2020/878.
+
+Les deux sont horodatés, versionnés, et citent la version exacte de la FDS
+fournisseur utilisée ainsi que la version du moteur. Les deux exigent une
+attestation de validation humaine préalable (voir § 6.8).
+
+> La structure détaillée de la fiche de données de sécurité du produit dilué —
+> l'ordre des seize rubriques, les sous-rubriques obligatoires et les mentions
+> exigées — doit être établie sur le texte officiel avant implémentation :
+> **`REGULATORY_REVIEW_REQUIRED`**. Le gabarit ne sera pas écrit de mémoire.
+
+## 6.0 Étiquette CLP
 
 ## 6.1 Principe
 
@@ -85,7 +102,36 @@ version, résultat réglementaire, version de moteur, documents sources. Un PDF
 d'étiquette téléchargé il y a six mois peut donc être retrouvé, réexpliqué, et
 comparé à la version actuelle.
 
-## 6.7 Hors périmètre V1
+## 6.8 Validation humaine préalable — brique juridique
+
+Aucun document n'est généré sans qu'une attestation ait été enregistrée. Avant la
+génération, l'utilisateur coche :
+
+> **Je confirme avoir vérifié ces informations.**
+
+Sont alors enregistrés dans `validation_attestations`, table **append-only** :
+
+| Donnée | Rôle |
+|--------|------|
+| utilisateur | qui a validé |
+| horodatage | quand |
+| empreinte des données validées | **ce qui** a été validé, scellé |
+| texte exact de la déclaration acceptée | ce qui a été affirmé, mot pour mot |
+| version du moteur | dans quel état des règles |
+| empreintes d'adresse réseau et d'agent | contexte, jamais en clair |
+
+L'empreinte permet de démontrer, des années plus tard, que les données validées
+sont exactement celles qui figurent dans le document. Une modification
+ultérieure est détectable.
+
+La table n'accepte que des insertions, garanties à deux niveaux : absence de
+politique de modification et déclencheur bloquant. Une contrainte sur
+`generated_documents` refuse toute étiquette, fiche de produit ou rapport
+d'analyse non rattaché à une attestation.
+
+C'est notre principale pièce de défense en cas de litige.
+
+## 6.9 Hors périmètre V1
 
 - Impression en planche (multi-poses) et repères de découpe : V1.1.
 - Codes-barres EAN, QR code : V1.1.

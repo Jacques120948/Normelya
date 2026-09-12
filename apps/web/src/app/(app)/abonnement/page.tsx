@@ -54,6 +54,16 @@ export default async function Page() {
                       ? 'Produits illimités'
                       : `${offre.maxActiveProducts} produit${offre.maxActiveProducts > 1 ? 's' : ''} actif${offre.maxActiveProducts > 1 ? 's' : ''}`}
                   </li>
+                  {offre.maxLifetimeProducts !== null ? (
+                    <li className="text-[var(--color-status-warning)]">
+                      Quota non renouvelable : archiver un produit ne libère pas de place.
+                    </li>
+                  ) : null}
+                  {offre.features.includes('product_sds') ? (
+                    <li>Étiquette CLP et FDS du produit dilué</li>
+                  ) : (
+                    <li>Étiquette CLP</li>
+                  )}
                   <li>
                     {offre.maxMembers} utilisateur{offre.maxMembers > 1 ? 's' : ''}
                   </li>

@@ -128,8 +128,8 @@ export function StatCard({
 /**
  * Badge de statut.
  *
- * Les libellés proviennent de packages/core : le mot « conforme » n'y figure
- * jamais, et aucun composant ne peut l'introduire.
+ * Les libellés proviennent de packages/core, où le vocabulaire interdit par
+ * CLAUDE.md est proscrit. Aucun composant ne peut l'introduire.
  */
 export function StatusBadge({ status }: { status: NormelyaStatus }) {
   const presentation = STATUS_PRESENTATION[status]

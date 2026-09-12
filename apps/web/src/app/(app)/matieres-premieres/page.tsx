@@ -197,7 +197,7 @@ function LienFiltre({
  * État du dossier documentaire.
  *
  * Il décrit l'avancement de la saisie, jamais une appréciation réglementaire :
- * une FDS validée signifie « vérifiée par vous », pas « produit conforme ».
+ * une FDS validée signifie « vérifiée par vous », et rien de plus.
  */
 function EtatFds({ etat }: { etat: SdsState }) {
   const presentation: Record<SdsState, { libelle: string; classe: string; symbole: string }> = {
