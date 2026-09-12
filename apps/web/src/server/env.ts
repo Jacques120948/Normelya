@@ -42,10 +42,15 @@ const serverSchema = z.object({
     .transform((value) => value === 'true'),
 })
 
+/**
+ * Environnement client.
+ *
+ * Aucune variable Supabase n'y figure : toute l'authentification est traitée
+ * côté serveur. Exposer la clé publique au navigateur n'apporterait rien et
+ * élargirait la surface pour rien.
+ */
 const clientSchema = z.object({
   NEXT_PUBLIC_APP_NAME: z.string().default('Normelya'),
-  NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
 })
 
 export type ServerEnv = z.infer<typeof serverSchema>
@@ -75,8 +80,6 @@ export function serverEnv(): ServerEnv {
 export function clientEnv() {
   return clientSchema.parse({
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   })
 }
 

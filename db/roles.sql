@@ -24,18 +24,32 @@
 --   normelya_migrator  propriétaire du schéma, utilisé uniquement par les
 --                      migrations. Jamais employé au service d'une requête.
 --
--- Les mots de passe sont fournis par l'environnement, jamais écrits ici.
+-- Les mots de passe sont fournis par l'environnement, jamais écrits ici :
+-- scripts/preparer-roles.mjs les pose par ALTER ROLE après ce fichier.
+--
+-- Ce fichier est rejouable : il peut être appliqué à un environnement neuf
+-- comme à un environnement déjà configuré, sans effet de bord.
 -- =============================================================================
 
--- \set app_password    '...'
--- \set service_password '...'
-
 -- Le rôle applicatif subit toutes les politiques, sans exception possible.
-CREATE ROLE normelya_app      LOGIN NOBYPASSRLS;
-
 -- Le rôle de service les contourne, et n'est employé que par du code de
 -- confiance qui ne reçoit aucun paramètre du client.
-CREATE ROLE normelya_service  LOGIN BYPASSRLS;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'normelya_app') THEN
+    CREATE ROLE normelya_app LOGIN NOBYPASSRLS;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'normelya_service') THEN
+    CREATE ROLE normelya_service LOGIN BYPASSRLS;
+  END IF;
+END
+$$;
+
+-- Réaffirmé à chaque exécution : c'est la propriété dont dépend toute
+-- l'isolation. Un rôle applicatif qui gagnerait BYPASSRLS rendrait muettes
+-- toutes les politiques, sans qu'aucun test fonctionnel ne le signale.
+ALTER ROLE normelya_app     NOBYPASSRLS;
+ALTER ROLE normelya_service BYPASSRLS;
 
 GRANT USAGE ON SCHEMA public, app TO normelya_app, normelya_service;
 

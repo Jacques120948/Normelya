@@ -21,6 +21,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "db:migrate": "node scripts/migrate.mjs",
+    "db:roles": "node scripts/preparer-roles.mjs",
     "check": "npm run verifier:secrets && npm run verifier:vocabulaire && npm run verifier:exclusions && npm run typecheck && npm run lint && npm run test",
     "verifier:secrets": "node scripts/verifier-secrets.mjs",
     "verifier:vocabulaire": "node scripts/verifier-vocabulaire.mjs",
