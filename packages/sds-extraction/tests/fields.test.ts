@@ -94,3 +94,43 @@ describe('point éclair', () => {
     expect(parseFlashPoint("Point d'éclair : non applicable")).toBeNull()
   })
 })
+
+describe('défauts relevés sur des fiches fournisseurs réelles', () => {
+  it('ne prend pas un intitulé de sous-rubrique pour un nom de fournisseur', () => {
+    // Non-régression : cette ligne est un titre officiel. Elle contient le mot
+    // « fournisseur » et faisait relever « de la fiche de données de sécurité ».
+    const texte = '1.3 Renseignements concernant le fournisseur de la fiche de données de sécurité'
+    expect(parseSupplierName(texte)).toBeNull()
+  })
+
+  it('ne prend pas un intitulé de rubrique pour un nom de fournisseur', () => {
+    // Non-régression : « société » figure dans l'intitulé officiel de la
+    // rubrique 1, et faisait relever « /de l'entreprise ».
+    const texte = "1. Identification de la substance/du mélange et de la société/de l'entreprise"
+    expect(parseSupplierName(texte)).toBeNull()
+    expect(parseSupplierName('RUBRIQUE 1 : Identification de la société')).toBeNull()
+  })
+
+  it('lit le fournisseur écrit sur la ligne suivant son étiquette', () => {
+    // Mise en page relevée : l'étiquette est seule, la valeur suit.
+    const texte = ['Fournisseur ', ': Nom : LAB SAS', 'Rue : 1 rue de la clef des champs'].join('\n')
+    expect(parseSupplierName(texte)?.value).toBe('LAB SAS')
+  })
+
+  it('lit une date de version et une date d’émission', () => {
+    // Écritures relevées : « Date de version », « Date d'émission ».
+    expect(parseRevisionDate('Date de version: 05/11/2025')?.value).toBe('2025-11-05')
+    expect(parseRevisionDate('Date d’émission: 06/08/2026')?.value).toBe('2026-08-06')
+  })
+
+  it('laisse le champ vide plutôt que de relever un morceau de titre', () => {
+    // Une valeur fausse est plus nuisible qu'une valeur absente : l'écran de
+    // vérification demandera la saisie.
+    const fiche = [
+      "1. Identification de la substance/du mélange et de la société/de l'entreprise",
+      '1.3 Renseignements concernant le fournisseur de la fiche de données de sécurité',
+      'Adresse : 12 rue des Artisans',
+    ].join('\n')
+    expect(parseSupplierName(fiche)).toBeNull()
+  })
+})

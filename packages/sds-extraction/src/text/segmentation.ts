@@ -29,6 +29,18 @@ const EN_TETE_AVEC_MOT = new RegExp(
 /** En-tête sans mot introducteur : « 3. Composition… ». */
 const EN_TETE_NUMERIQUE = /^\s*(\d{1,2})\s*[.)]\s+(\S.*)$/
 
+/**
+ * En-tête sans ponctuation : « 3 Composition/informations sur les composants ».
+ *
+ * Cette forme est ambiguë — « 3 produits sont concernés » lui ressemble. Elle
+ * n'est donc retenue qu'en seconde passe, si la lecture stricte a échoué, et
+ * seulement lorsqu'elle fait apparaître nettement plus de rubriques.
+ */
+const EN_TETE_SANS_PONCTUATION = /^\s*(\d{1,2})\s+([A-ZÀ-Ý]\S.{2,95})$/
+
+/** Mot introducteur seul sur sa ligne, le numéro étant reporté à la suivante. */
+const MOT_INTRODUCTEUR_SEUL = new RegExp(`^\\s*(?:${MOTS_DE_RUBRIQUE.join('|')})\\s*$`, 'i')
+
 export type SdsSection = {
   /** Numéro de rubrique, de 1 à 16. */
   number: number
@@ -65,7 +77,18 @@ export function segmentSections(texteBrut: string): SegmentationResult {
   // officiel du règlement écrit « RUBRIQUE 1 — Identification » : sans cette
   // étape, aucun en-tête n'est reconnu.
   const lignes = normalizeTypography(texteBrut).split(/\r?\n/)
-  const enTetes = releverEnTetes(lignes)
+
+  // Première passe, stricte. Si elle ne retrouve pas la moitié des rubriques,
+  // le document emploie sans doute une mise en page moins conventionnelle : on
+  // retente avec des règles tolérantes, et on ne les garde que si elles font
+  // mieux. Un document bien formé n'est jamais soumis aux règles permissives.
+  let enTetes = releverEnTetes(lignes, { tolerant: false })
+  if (compterRubriques(enTetes) < SDS_SECTION_COUNT / 2) {
+    const tolerants = releverEnTetes(lignes, { tolerant: true })
+    if (compterRubriques(tolerants) > compterRubriques(enTetes)) {
+      enTetes = tolerants
+    }
+  }
   const sections = new Map<number, SdsSection>()
 
   enTetes.forEach((enTete, index) => {
@@ -100,10 +123,33 @@ export function segmentSections(texteBrut: string): SegmentationResult {
   }
 }
 
-function releverEnTetes(lignes: string[]): EnTete[] {
+function compterRubriques(enTetes: EnTete[]): number {
+  return new Set(enTetes.map((enTete) => enTete.number)).size
+}
+
+function releverEnTetes(lignes: string[], options: { tolerant: boolean }): EnTete[] {
   const enTetes: EnTete[] = []
 
   lignes.forEach((ligne, index) => {
+    // « section » seul sur sa ligne, « 1 Identification… » sur la suivante :
+    // mise en page rencontrée sur des fiches réelles.
+    if (options.tolerant && MOT_INTRODUCTEUR_SEUL.test(ligne)) {
+      const suivante = lignes[index + 1] ?? ''
+      const reporte = /^\s*(\d{1,2})\s*[:.\-–)]?\s*(.*)$/.exec(suivante)
+      if (reporte) {
+        const numero = Number(reporte[1])
+        if (estNumeroDeRubrique(numero)) {
+          enTetes.push({
+            number: numero,
+            heading: reporte[2] ?? '',
+            line: index + 1,
+            mot: ligne.trim().toLowerCase(),
+          })
+          return
+        }
+      }
+    }
+
     const avecMot = EN_TETE_AVEC_MOT.exec(ligne)
     if (avecMot) {
       const numero = Number(avecMot[1])
@@ -122,6 +168,18 @@ function releverEnTetes(lignes: string[]): EnTete[] {
       // titre : court, et non terminé par une ponctuation de phrase.
       if (estNumeroDeRubrique(numero) && intitule.length <= 120 && !/[.;,]$/.test(intitule)) {
         enTetes.push({ number: numero, heading: intitule, line: index, mot: null })
+      }
+      return
+    }
+
+    if (options.tolerant) {
+      const sansPonctuation = EN_TETE_SANS_PONCTUATION.exec(ligne)
+      if (sansPonctuation) {
+        const numero = Number(sansPonctuation[1])
+        const intitule = sansPonctuation[2] ?? ''
+        if (estNumeroDeRubrique(numero) && !/[.;,]$/.test(intitule)) {
+          enTetes.push({ number: numero, heading: intitule, line: index, mot: null })
+        }
       }
     }
   })

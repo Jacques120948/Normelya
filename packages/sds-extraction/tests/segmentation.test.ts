@@ -133,3 +133,44 @@ describe('robustesse typographique des en-têtes', () => {
     expect(resultat.sections.get(3)?.heading).toBe('Composition')
   })
 })
+
+describe('mises en page relevées sur des fiches réelles', () => {
+  it('reconnaît un en-tête dont le mot introducteur est isolé sur sa ligne', () => {
+    // Non-régression : cette mise en page rendait le document entièrement
+    // illisible, aucune rubrique n'étant détectée.
+    const fiche = [
+      'section',
+      '1 Identification de la substance/du mélange et de la société',
+      'Nom du produit : DEMO',
+      'section',
+      '3 Composition/informations sur les composants',
+      'DEMO Substance A 78-70-6 5 %',
+    ].join('\n')
+
+    const resultat = segmentSections(fiche)
+    expect(resultat.sections.get(1)?.heading).toBe(
+      'Identification de la substance/du mélange et de la société',
+    )
+    expect(resultat.sections.get(3)?.body).toContain('78-70-6')
+  })
+
+  it('n’emploie les règles tolérantes que si la lecture stricte a échoué', () => {
+    // Un document bien formé ne doit pas se voir appliquer des règles
+    // permissives, qui prendraient une phrase numérotée pour un en-tête.
+    const lignes: string[] = []
+    for (let numero = 1; numero <= 16; numero += 1) {
+      lignes.push(`RUBRIQUE ${numero} : Intitulé ${numero}`)
+      lignes.push(`3 produits sont concernés par cette rubrique`)
+    }
+
+    const resultat = segmentSections(lignes.join('\n'))
+    expect(resultat.coverage).toBe(1)
+    expect(resultat.sections.get(3)?.heading).toBe('Intitulé 3')
+  })
+
+  it('ne retient la seconde passe que si elle fait mieux', () => {
+    // Trop peu d'en-têtes pour conclure : aucune rubrique n'est inventée.
+    const resultat = segmentSections('3 produits sont concernés.\nAutre phrase ordinaire.')
+    expect(resultat.sections.size).toBe(0)
+  })
+})

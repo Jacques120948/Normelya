@@ -69,9 +69,51 @@ sur un sous-ensemble du corpus une fois la complétude satisfaisante.
 C'est précisément la raison d'être de l'écran de vérification : Normelya ne
 prétend jamais avoir bien lu, il montre ce qu'il a lu et d'où il le tient.
 
-## 16.5 Statut à ce jour
+## 16.5 Première mesure sur fiches réelles — 12 septembre 2026
 
-Le corpus n'est pas présent dans l'environnement de développement. Aucune mesure
-n'a donc été produite sur des fiches réelles, et aucun taux de réussite n'est
-avancé dans cette documentation. Les chiffres n'apparaîtront ici qu'une fois la
-commande exécutée sur de vraies fiches.
+Corpus mesuré : **4 fiches**, toutes des parfums, d'un même fournisseur pour
+trois d'entre elles.
+
+| Indicateur | Résultat |
+|------------|----------|
+| Lecture automatique | 4 fiches sur 4 |
+| Saisie manuelle nécessaire | aucune |
+| Recours à un modèle de langage | **aucun** |
+| Composants lus | 12 à 53 par fiche |
+
+Taux de lecture par champ : nom du produit, date de révision, version, point
+éclair, mentions de danger et composition à 100 %. Nom du fournisseur à 25 %.
+
+### Trois défauts corrigés grâce à ce corpus
+
+Aucun n'apparaissait sur des documents de test. Chacun a donné lieu à un test de
+non-régression.
+
+1. **Une fiche entièrement illisible.** Sa mise en page isole le mot
+   « section » sur une ligne et reporte le numéro et l'intitulé sur la suivante.
+   Aucune rubrique n'était détectée. Une seconde passe, aux règles tolérantes,
+   n'est appliquée que si la lecture stricte échoue.
+2. **Un nom de fournisseur faux.** Les intitulés officiels emploient les mots
+   recherchés : « Renseignements concernant le fournisseur », « de la société ».
+   Trois fiches sur quatre relevaient un morceau de titre. Les lignes de titre
+   sont désormais écartées.
+3. **Aucune date lue.** Les fiches écrivent « Date de version » et « Date
+   d'émission », absentes de la liste des étiquettes reconnues.
+
+### Le fournisseur reste à 25 %
+
+Trois fiches placent le nom dans le corps de la sous-rubrique 1.3, sans
+étiquette dédiée sur la même ligne. Le champ reste **vide** plutôt que faux :
+l'écran de vérification demandera la saisie.
+
+C'est la démonstration de ce qu'annonce le paragraphe 16.4 : la mesure porte sur
+la complétude, pas sur l'exactitude. Avant correction, ce champ affichait
+100 % avec trois valeurs fausses sur quatre. Le chiffre était meilleur et le
+produit était pire.
+
+### Ce que ce corpus ne couvre pas encore
+
+Quatre fiches, trois d'un même fournisseur, toutes en français et toutes
+porteuses d'une couche de texte. Manquent : d'autres fournisseurs, des cires et
+des colorants, l'anglais et l'allemand, des documents scannés, des fiches
+anciennes, et deux versions d'une même fiche.

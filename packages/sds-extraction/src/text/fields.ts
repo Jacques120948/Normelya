@@ -30,7 +30,13 @@ function chercherEtiquette(texte: string, etiquettes: readonly string[]): string
   const parLongueur = [...etiquettes].sort((a, b) => b.length - a.length)
   const lignes = texte.split(/\r?\n/)
 
-  for (const ligne of lignes) {
+  for (const [index, ligne] of lignes.entries()) {
+    // Les intitulés de sous-rubrique emploient les mêmes mots que les étiquettes
+    // recherchées. « 1.3 Renseignements concernant le fournisseur de la fiche de
+    // données de sécurité » n'est pas un nom de fournisseur : sans ce filtre, on
+    // relèverait « de la fiche de données de sécurité ».
+    if (estLigneDeTitre(ligne)) continue
+
     // Le repli conserve les positions : on cherche sur la version repliée et on
     // découpe sur la ligne d'origine, pour restituer l'extrait exact.
     const normalisee = foldForMatching(ligne)
@@ -43,11 +49,46 @@ function chercherEtiquette(texte: string, etiquettes: readonly string[]): string
       if (suivant !== undefined && /[a-z0-9]/.test(suivant)) continue
 
       const apres = ligne.slice(position + cible.length)
-      const valeur = apres.replace(/^[\s:.\-–]+/, '').trim()
+      const valeur = nettoyerValeur(apres)
       if (valeur.length > 0) return valeur
+
+      // Étiquette seule sur sa ligne : la valeur est sur la suivante.
+      const suivante = lignes[index + 1]
+      if (suivante && !estLigneDeTitre(suivante)) {
+        const reportee = nettoyerValeur(suivante)
+        if (reportee.length > 0) return reportee
+      }
     }
   }
   return null
+}
+
+/**
+ * Lignes qui sont des titres, jamais des valeurs.
+ *
+ * Les intitulés officiels emploient les mêmes mots que les étiquettes
+ * recherchées : « Identification de la substance/du mélange et de la société/de
+ * l'entreprise » contient « société », « 1.3 Renseignements concernant le
+ * fournisseur » contient « fournisseur ». Sans ce filtre, on relève un morceau
+ * de titre à la place du nom recherché — une valeur fausse, plus nuisible
+ * qu'une valeur absente.
+ */
+const LIGNES_DE_TITRE: readonly RegExp[] = [
+  /^\s*\d{1,2}\.\d{1,2}\.?\s+\S/, // « 1.3 Renseignements… »
+  /^\s*\d{1,2}\.\s+[A-ZÀ-Ý]/, // « 1. Identification… »
+  /^\s*(?:rubrique|section|abschnitt|sezione|sectie)\s*:?\s*\d{1,2}\b/i,
+]
+
+function estLigneDeTitre(ligne: string): boolean {
+  return LIGNES_DE_TITRE.some((motif) => motif.test(ligne))
+}
+
+function nettoyerValeur(texte: string): string {
+  return texte
+    .replace(/^[\s:.\-–]+/, '')
+    // Certaines fiches préfixent la valeur par un libellé de champ.
+    .replace(/^Nom\s*:\s*/i, '')
+    .trim()
 }
 
 /* ------------------------------------------------------------------- Dates */
@@ -56,6 +97,13 @@ const ETIQUETTES_DATE = [
   'date de revision',
   'date de révision',
   'date de la revision',
+  // Écritures relevées sur des fiches fournisseurs réelles.
+  'date de version',
+  'date d’emission',
+  "date d'emission",
+  'date d’édition',
+  "date d'edition",
+  'date de publication',
   'version du',
   'revision date',
   'date of revision',
