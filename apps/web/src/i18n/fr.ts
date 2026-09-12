@@ -123,6 +123,46 @@ export const fr = {
     fdsValidee: 'FDS validée',
   },
 
+  produits: {
+    titre: 'Mes produits',
+    sousTitre: 'Vos bougies et fondants, leurs recettes et leurs analyses.',
+    aucun: 'Aucun produit enregistré.',
+    aucunAide:
+      'Créez votre premier produit, puis composez sa recette à partir de vos matières premières.',
+    nom: 'Nom du produit',
+    type: 'Type de produit',
+    marches: 'Marchés visés',
+    poidsNet: 'Poids net (g)',
+    contenant: 'Contenant',
+    recette: 'Recette',
+    versions: 'Versions',
+    version: 'Version',
+    ingredients: 'Matières',
+    total: 'Total',
+    derniereAnalyse: 'Dernière analyse',
+    aucuneAnalyse: 'Pas encore analysé',
+    archiver: 'Archiver ce produit',
+    reactiver: 'Réactiver ce produit',
+    archive: 'Archivé',
+    voirArchives: 'Voir les produits archivés',
+    masquerArchives: 'Masquer les produits archivés',
+    recetteEnregistree: 'Recette enregistrée.',
+    nouvelleVersionCreee:
+      'Une analyse était rattachée à la version précédente : une nouvelle version a été créée. L’ancienne reste consultable à l’identique.',
+    versionFigee:
+      'Cette version porte une analyse. Toute modification de la recette créera une nouvelle version.',
+    totalAttendu: 'Le total doit atteindre exactement 100 %.',
+    tauxParfum: 'Taux de parfum',
+    ajouterLigne: 'Ajouter une matière',
+    retirerLigne: 'Retirer',
+    aucuneMatiere:
+      'Aucune matière première enregistrée. Ajoutez d’abord vos cires et vos parfums.',
+    fdsUtilisee: 'FDS utilisée',
+    sansFds: 'Aucune FDS validée',
+    role: 'Rôle',
+    pourcentage: 'Pourcentage',
+  },
+
   statuts: {
     analyseTerminee: 'Analyse terminée',
     verificationNecessaire: 'Vérification nécessaire',

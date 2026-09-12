@@ -88,14 +88,24 @@ export function checkRecipeTotal(percents: readonly number[]): RecipeTotalCheck 
   return { valid: false, total, difference, message }
 }
 
-/** Affichage lisible : on retire les zéros décimaux inutiles. */
-export function formatPercent(value: number, maxDecimals = PERCENT_DECIMALS): string {
+/**
+ * Nombre décimal en écriture française, sans unité.
+ *
+ * Les zéros décimaux inutiles sont retirés. Sert notamment à pré-remplir un
+ * champ de saisie, où un signe « % » serait renvoyé tel quel au serveur.
+ */
+export function formatDecimal(value: number, maxDecimals = PERCENT_DECIMALS): string {
   const rounded = roundPercent(value, maxDecimals)
   const text = rounded
     .toFixed(maxDecimals)
     .replace(/0+$/, '')
     .replace(/\.$/, '')
-  return `${text.replace('.', ',')} %`
+  return text.replace('.', ',')
+}
+
+/** Affichage lisible d'un pourcentage, signe compris. */
+export function formatPercent(value: number, maxDecimals = PERCENT_DECIMALS): string {
+  return `${formatDecimal(value, maxDecimals)} %`
 }
 
 export type ConcentrationRange = {

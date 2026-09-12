@@ -9,9 +9,8 @@ import {
   notifyAffectedProducts,
   validateSdsVersion,
 } from '../../apps/web/src/server/application/sds-validation'
-import type { Database, DatabaseClient } from '../../apps/web/src/server/ports/database'
-import { createTestDatabase, hasTestDatabase, seedAsOwner, TEST_DATABASE_URL } from './aide'
-import pg from 'pg'
+import type { Database } from '../../apps/web/src/server/ports/database'
+import { createDatabasePorts, createTestDatabase, hasTestDatabase, seedAsOwner } from './aide'
 
 /**
  * Parcours complet d'une fiche de données de sécurité : import, lecture,
@@ -78,57 +77,11 @@ describeDb('import et validation d’une fiche', () => {
   let databaseName: string
   let racineStockage: string
   let deps: { db: Database; serviceDb: Database; storage: LocalFileStorage }
+  let fermerPorts: () => Promise<void>
   let contexte: RequestContext
 
   const atelier = { org: '', user: '', matiere: '', produit: '' }
   let versionV1 = ''
-
-  /** Adapte un pool pg au port Database, avec le contexte utilisateur. */
-  function construireBase(url: string): Database {
-    const pool = new pg.Pool({ connectionString: url, max: 4 })
-    const envelopper = (client: pg.PoolClient): DatabaseClient => ({
-      query: async <T>(sql: string, params?: unknown[]) =>
-        (await client.query(sql, params as never)).rows as T[],
-      queryOne: async <T>(sql: string, params?: unknown[]) =>
-        ((await client.query(sql, params as never)).rows[0] as T | undefined) ?? null,
-    })
-
-    const transaction = async <T>(
-      contexteEventuel: { userId: string; organizationId?: string } | null,
-      run: (client: DatabaseClient) => Promise<T>,
-    ): Promise<T> => {
-      const client = await pool.connect()
-      try {
-        await client.query('BEGIN')
-        if (contexteEventuel) {
-          await client.query(`SELECT set_config('app.current_user_id', $1, true)`, [
-            contexteEventuel.userId,
-          ])
-          await client.query(`SELECT set_config('app.current_organization_id', $1, true)`, [
-            contexteEventuel.organizationId ?? '',
-          ])
-        }
-        const valeur = await run(envelopper(client))
-        await client.query('COMMIT')
-        return valeur
-      } catch (erreur) {
-        await client.query('ROLLBACK').catch(() => undefined)
-        throw erreur
-      } finally {
-        client.release()
-      }
-    }
-
-    return {
-      query: async <T>(sql: string, params?: unknown[]) =>
-        (await pool.query(sql, params as never)).rows as T[],
-      queryOne: async <T>(sql: string, params?: unknown[]) =>
-        ((await pool.query(sql, params as never)).rows[0] as T | undefined) ?? null,
-      transaction: (run) => transaction(null, run),
-      withContext: (ctx, run) => transaction(ctx, run),
-      close: () => pool.end(),
-    } as Database
-  }
 
   beforeAll(async () => {
     const created = await createTestDatabase()
@@ -160,12 +113,11 @@ describeDb('import et validation d’une fiche', () => {
       atelier.matiere = m[0]!.id
     })
 
-    const cible = TEST_DATABASE_URL.replace(/\/[^/?]*(\?|$)/, `/${databaseName}$1`)
-    const appUrl = cible.replace(/^postgres(ql)?:\/\/[^@]*@/, 'postgres://normelya_app_test:test@')
-
+    const ports = await createDatabasePorts(databaseName)
+    fermerPorts = ports.close
     deps = {
-      db: construireBase(appUrl),
-      serviceDb: construireBase(cible),
+      db: ports.db,
+      serviceDb: ports.serviceDb,
       storage: new LocalFileStorage({ directory: racineStockage, signingSecret: 'test' }),
     }
 
@@ -180,8 +132,7 @@ describeDb('import et validation d’une fiche', () => {
   }, 90_000)
 
   afterAll(async () => {
-    await deps?.db.close().catch(() => undefined)
-    await deps?.serviceDb.close().catch(() => undefined)
+    if (fermerPorts) await fermerPorts()
     if (racineStockage) await rm(racineStockage, { recursive: true, force: true })
     if (dropDatabase) await dropDatabase()
   })

@@ -76,8 +76,30 @@ Dépôt, contrôles d'entrée, extraction texte, segmentation, extraction struct
 contrôles de cohérence, écran de vérification avec extrait source, validation,
 versionnage, alertes de nouvelle version.
 
-### Phase 4 — Produits
+### Phase 4 — Produits — livrée
+
 Création guidée, versions, recettes, contrôle du total, verrouillage à l'analyse.
+
+Ce qui a été livré :
+
+- création en trois informations : type, nom, marchés visés ; le poids et le
+  contenant restent facultatifs parce qu'ils ne conditionnent pas la recette,
+  ils seront exigés au moment de l'étiquette
+- recette à plusieurs parfums, plus cire, colorants et additifs : le calcul
+  portera sur le mélange final complet, jamais parfum par parfum
+- pourcentage saisi dans un champ numérique libre, jamais choisi dans une liste ;
+  la valeur est restituée telle quelle, sans arrondi silencieux
+- total imposé à exactement 100 %, sans tolérance : l'écart est calculé à la
+  saisie avec la même arithmétique que le serveur, et affiché avant toute écriture
+- version courante verrouillée dès qu'une analyse s'y rattache ; une modification
+  crée alors une nouvelle version et l'ancienne reste rejouable à l'identique
+- quota de l'offre gratuite contrôlé côté serveur sur deux plafonds, dont un
+  compteur cumulatif que l'archivage ne libère pas
+- version exacte de FDS validée rattachée à chaque ingrédient au moment de la
+  saisie, jamais recalculée ensuite
+
+Aucune règle réglementaire n'a été écrite : la recette est une donnée d'entrée,
+pas un résultat.
 
 ### Phase 5 — Moteur — point d'arrêt
 

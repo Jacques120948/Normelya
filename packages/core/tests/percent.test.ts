@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   checkRecipeTotal,
   concentrationInProduct,
+  formatDecimal,
   formatPercent,
   normalizeConcentration,
   PercentError,
@@ -98,5 +99,13 @@ describe('arithmétique des pourcentages', () => {
     expect(formatPercent(9)).toBe('9 %')
     expect(formatPercent(0.9)).toBe('0,9 %')
     expect(formatPercent(12.5)).toBe('12,5 %')
+  })
+
+  it('formate un nombre sans unité, pour un champ de saisie', () => {
+    // Un signe « % » pré-rempli dans un champ repartirait tel quel au serveur.
+    expect(formatDecimal(9)).toBe('9')
+    expect(formatDecimal(88.5)).toBe('88,5')
+    expect(formatDecimal(0.1)).toBe('0,1')
+    expect(formatDecimal(7.2, 3)).toBe('7,2')
   })
 })

@@ -3,6 +3,7 @@ import { readFile, readdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pg from 'pg'
+import type { Database, DatabaseClient } from '../../apps/web/src/server/ports/database'
 
 const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations')
 
@@ -127,4 +128,78 @@ export async function seedAsOwner<T>(
   } finally {
     await client.end()
   }
+}
+
+/**
+ * Construit les deux ports d'accès aux données attendus par les services :
+ * la connexion applicative, soumise aux politiques d'isolation, et la
+ * connexion de service, qui les contourne pour les écritures de confiance.
+ *
+ * Reproduit fidèlement ce que fait l'adaptateur de production, y compris la
+ * pose du contexte utilisateur par SET LOCAL.
+ */
+export async function createDatabasePorts(databaseName: string): Promise<{
+  db: Database
+  serviceDb: Database
+  close: () => Promise<void>
+}> {
+  const cible = TEST_DATABASE_URL.replace(/\/[^/?]*(\?|$)/, `/${databaseName}$1`)
+  const appUrl = cible.replace(/^postgres(ql)?:\/\/[^@]*@/, `postgres://${APP_ROLE}:test@`)
+
+  const db = construirePort(appUrl)
+  const serviceDb = construirePort(cible)
+
+  return {
+    db,
+    serviceDb,
+    close: async () => {
+      await db.close().catch(() => undefined)
+      await serviceDb.close().catch(() => undefined)
+    },
+  }
+}
+
+function construirePort(url: string): Database {
+  const pool = new pg.Pool({ connectionString: url, max: 4 })
+
+  const envelopper = (client: pg.PoolClient): DatabaseClient => ({
+    query: async <T>(sql: string, params?: unknown[]) =>
+      (await client.query(sql, params as never)).rows as T[],
+    queryOne: async <T>(sql: string, params?: unknown[]) =>
+      ((await client.query(sql, params as never)).rows[0] as T | undefined) ?? null,
+  })
+
+  const enTransaction = async <T>(
+    contexte: { userId: string; organizationId?: string } | null,
+    run: (client: DatabaseClient) => Promise<T>,
+  ): Promise<T> => {
+    const client = await pool.connect()
+    try {
+      await client.query('BEGIN')
+      if (contexte) {
+        await client.query(`SELECT set_config('app.current_user_id', $1, true)`, [contexte.userId])
+        await client.query(`SELECT set_config('app.current_organization_id', $1, true)`, [
+          contexte.organizationId ?? '',
+        ])
+      }
+      const valeur = await run(envelopper(client))
+      await client.query('COMMIT')
+      return valeur
+    } catch (erreur) {
+      await client.query('ROLLBACK').catch(() => undefined)
+      throw erreur
+    } finally {
+      client.release()
+    }
+  }
+
+  return {
+    query: async <T>(sql: string, params?: unknown[]) =>
+      (await pool.query(sql, params as never)).rows as T[],
+    queryOne: async <T>(sql: string, params?: unknown[]) =>
+      ((await pool.query(sql, params as never)).rows[0] as T | undefined) ?? null,
+    transaction: (run) => enTransaction(null, run),
+    withContext: (contexte, run) => enTransaction(contexte, run),
+    close: () => pool.end(),
+  } as Database
 }
