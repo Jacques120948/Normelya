@@ -16,8 +16,8 @@ parallèle ; la mise en vente, non.
 | Phase | Contenu | État |
 |-------|---------|------|
 | 0 | Architecture, dossier de conception, décisions | ✅ fait |
-| 1 | Authentification, organisations, base de données, sécurité initiale | 🚧 en cours |
-| 2 | Tableau de bord, matières premières | à venir |
+| 1 | Authentification, organisations, base de données, sécurité initiale | ✅ fait |
+| 2 | Tableau de bord, matières premières | 🚧 en cours |
 | 3 | Import FDS, extraction, validation humaine | à venir |
 | 4 | Produits, versions, recettes | à venir |
 | 5 | Moteur réglementaire | à venir |
@@ -32,7 +32,7 @@ Chaque phase se termine par : code + tests verts + documentation à jour + commi
 
 ## 12.3 Détail des phases
 
-### Phase 1 — Fondations (en cours)
+### Phase 1 — Fondations (terminée)
 
 - espace de travail npm, TypeScript strict, lint, CI
 - migrations SQL : identité, organisations, membres, abonnements, audit, RLS

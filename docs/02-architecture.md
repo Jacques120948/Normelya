@@ -188,6 +188,10 @@ des libellés officiels par langue, stockés comme données du moteur, et une la
 non couverte produit `REGULATORY_REVIEW_REQUIRED` plutôt qu'une traduction
 approximative.
 
+> Le design system reste dans l'application tant qu'elle est son unique
+> consommateur. Il sera extrait en `packages/ui` le jour où un second
+> consommateur apparaîtra (back-office séparé, par exemple).
+
 ## 2.7 Environnements
 
 | Environnement | Base | Paiement | IA | Usage |

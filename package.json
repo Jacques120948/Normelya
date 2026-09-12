@@ -14,14 +14,15 @@
     "dev": "npm run dev --workspace @normelya/web",
     "build": "npm run build --workspace @normelya/web",
     "start": "npm run start --workspace @normelya/web",
-    "typecheck": "tsc --build --force",
+    "typecheck": "tsc --build --force && tsc --noEmit -p apps/web/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "format": "prettier --write .",
     "db:migrate": "node scripts/migrate.mjs",
-    "check": "npm run typecheck && npm run lint && npm run test"
+    "check": "npm run verifier:secrets && npm run typecheck && npm run lint && npm run test",
+    "verifier:secrets": "node scripts/verifier-secrets.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

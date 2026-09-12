@@ -9,6 +9,7 @@ export default tseslint.config(
       '**/dist/**',
       '**/coverage/**',
       '**/*.tsbuildinfo',
+      '**/next-env.d.ts',
     ],
   },
   js.configs.recommended,
@@ -23,6 +24,14 @@ export default tseslint.config(
       eqeqeq: ['error', 'always'],
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
+  },
+  {
+    // Scripts Node exécutés en ligne de commande.
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: { process: 'readonly', console: 'readonly' },
+    },
+    rules: { 'no-console': 'off' },
   },
   {
     // Le moteur réglementaire ne doit dépendre de rien : aucun import relatif

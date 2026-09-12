@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { MARKETS, PRODUCT_TYPES, RAW_MATERIAL_CATEGORIES } from './markets.js'
-import { ORGANIZATION_ROLES } from './identity.js'
-import { PLAN_CODES } from './plans.js'
-import { checkRecipeTotal } from './percent.js'
+import { MARKETS, PRODUCT_TYPES, RAW_MATERIAL_CATEGORIES } from './markets'
+import { ORGANIZATION_ROLES } from './identity'
+import { PLAN_CODES } from './plans'
+import { checkRecipeTotal } from './percent'
 
 /**
  * Schémas de validation partagés.

@@ -34,4 +34,4 @@ export type RequestContext = {
   isPlatformAdmin: boolean
 }
 
-import type { PlanCode } from './plans.js'
+import type { PlanCode } from './plans'
