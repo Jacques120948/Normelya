@@ -127,8 +127,8 @@ jobs:
       - name: Navigateur
         run: npx playwright install --with-deps chromium
 
-      - name: Parcours complet
-        run: npx playwright test e2e/parcours-authentification.spec.ts
+      - name: Parcours complets
+        run: npx playwright test e2e/parcours-authentification.spec.ts e2e/parcours-fds.spec.ts
 
       - name: Compilation de production
         run: npm run build --workspace @normelya/web

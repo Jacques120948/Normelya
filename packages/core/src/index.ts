@@ -1,4 +1,5 @@
 export * from './result'
+export * from './canonical'
 export * from './errors'
 export * from './identity'
 export * from './markets'

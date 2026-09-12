@@ -71,7 +71,9 @@ export async function createTestDatabase(): Promise<{
     pool,
     databaseName,
     dropDatabase: async () => {
-      await pool.end()
+      // Le pool peut avoir été fermé par le test lui-même : la fermeture ne
+      // doit pas empêcher la suppression de la base.
+      await pool.end().catch(() => undefined)
       const cleanup = new pg.Client({ connectionString: TEST_DATABASE_URL })
       await cleanup.connect()
       await cleanup.query(

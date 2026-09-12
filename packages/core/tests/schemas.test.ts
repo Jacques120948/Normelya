@@ -7,6 +7,9 @@ import {
   signUpSchema,
   totalFragranceLoad,
   uploadMetadataSchema,
+  VALIDATION_STATEMENT,
+  validateSdsSchema,
+  validatedSubstanceSchema,
 } from '../src/schemas'
 
 const uuid = (n: number) => `00000000-0000-4000-8000-00000000000${n}`
@@ -201,5 +204,92 @@ describe('taux de parfum', () => {
         { role: 'dye', percent: 1 },
       ]),
     ).toBe(11)
+  })
+})
+
+describe('fiche de données de sécurité validée', () => {
+  const substance = {
+    declaredName: 'DEMO Substance A',
+    casNumber: '78-70-6',
+    ecNumber: '201-134-4',
+    concentrationMin: 5,
+    concentrationMax: 10,
+    concentrationExact: null,
+    classificationText: 'Skin Sens. 1',
+    hazardStatements: ['H317'],
+  }
+
+  const fiche = {
+    commercialName: 'DEMO Parfum',
+    supplierName: 'DEMO Maison des Parfums',
+    versionLabel: '2.0',
+    revisionDate: '2026-03-12',
+    language: 'fr',
+    flashPointCelsius: 93,
+    hazardStatements: ['H317'],
+    euhStatements: [],
+    precautionaryStatements: ['P280'],
+    substances: [substance],
+  }
+
+  it('accepte une fiche vérifiée complète', () => {
+    expect(validateSdsSchema.safeParse({ payload: fiche, confirmed: true }).success).toBe(true)
+  })
+
+  it('exige la confirmation, même si tout le reste est correct', () => {
+    const resultat = validateSdsSchema.safeParse({ payload: fiche, confirmed: false })
+    expect(resultat.success).toBe(false)
+    if (resultat.success) throw new Error('inattendu')
+    expect(resultat.error.issues[0]?.message).toContain('Confirmez avoir vérifié')
+  })
+
+  it('conserve une plage sans exiger de valeur exacte', () => {
+    const resultat = validatedSubstanceSchema.safeParse(substance)
+    expect(resultat.success).toBe(true)
+    if (!resultat.success) return
+    expect(resultat.data.concentrationMin).toBe(5)
+    expect(resultat.data.concentrationMax).toBe(10)
+    expect(resultat.data.concentrationExact).toBeNull()
+  })
+
+  it('refuse une substance sans aucune concentration déclarée', () => {
+    const resultat = validatedSubstanceSchema.safeParse({
+      ...substance,
+      concentrationMin: null,
+      concentrationMax: null,
+      concentrationExact: null,
+    })
+    expect(resultat.success).toBe(false)
+    if (resultat.success) return
+    expect(resultat.error.issues[0]?.message).toContain('Indiquez une concentration')
+  })
+
+  it('refuse une plage incohérente', () => {
+    const resultat = validatedSubstanceSchema.safeParse({
+      ...substance,
+      concentrationMin: 10,
+      concentrationMax: 5,
+    })
+    expect(resultat.success).toBe(false)
+  })
+
+  it('refuse un numéro CAS mal formé', () => {
+    expect(validatedSubstanceSchema.safeParse({ ...substance, casNumber: '78706' }).success).toBe(
+      false,
+    )
+  })
+
+  it('accepte une fiche sans substance déclarée, sans en inventer', () => {
+    const resultat = validateSdsSchema.safeParse({
+      payload: { ...fiche, substances: [] },
+      confirmed: true,
+    })
+    expect(resultat.success).toBe(true)
+    if (!resultat.success) return
+    expect(resultat.data.payload.substances).toEqual([])
+  })
+
+  it('fixe le texte exact de la déclaration acceptée', () => {
+    expect(VALIDATION_STATEMENT).toBe('Je confirme avoir vérifié ces informations.')
   })
 })

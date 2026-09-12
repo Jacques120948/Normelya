@@ -18,7 +18,7 @@ parallèle ; la mise en vente, non.
 | 0 | Architecture, dossier de conception, décisions | ✅ fait |
 | 1 | Authentification, organisations, base de données, sécurité initiale | ✅ fait |
 | 2 | Tableau de bord, matières premières | ✅ fait |
-| 3 | Import FDS, extraction, validation humaine | 🚧 lecteur livré, intégration applicative à venir |
+| 3 | Import FDS, extraction, validation humaine | ✅ fait |
 | 4 | Produits, versions, recettes | à venir |
 | 5 | Moteur réglementaire | ⏸ point d'arrêt : validation humaine requise |
 | 6 | Résultats, étiquettes | à venir |
@@ -56,12 +56,21 @@ Une matière première n'est jamais supprimée : elle peut être citée par une
 recette ou une analyse déjà produite. L'archivage la retire des listes sans
 rompre la traçabilité.
 
-### Phase 3 — FDS — point d'arrêt
+### Phase 3 — FDS (terminée)
 
-Le développement s'arrête ici en attendant une validation humaine explicite
-(voir `CLAUDE.md`). L'import de fiches suppose de manipuler des données
-réglementaires : aucune table de mentions H, EUH ou P ne peut être écrite sans
-source vérifiée.
+- lecteur déterministe : identifiants et leurs clés de contrôle, segmentation en
+  seize rubriques, tableau de composition, champs d'en-tête, point éclair
+- aucun appel à un modèle : sur le corpus mesuré, l'analyse du texte suffit
+- import avec contrôle des octets d'en-tête, déduplication par empreinte,
+  quota de stockage, document original conservé intact
+- écran de vérification montrant, champ par champ, l'extrait du document dont
+  vient la valeur proposée
+- validation humaine scellée par une attestation append-only
+- versionnage : une nouvelle version archive la précédente, jamais ne l'écrase,
+  et les produits concernés sont signalés sans recalcul automatique
+
+Aucune table de mentions H, EUH ou P n'a été écrite. Les codes relevés sont des
+chaînes extraites du document fournisseur, jamais interprétées.
 
 Dépôt, contrôles d'entrée, extraction texte, segmentation, extraction structurée,
 contrôles de cohérence, écran de vérification avec extrait source, validation,

@@ -57,7 +57,11 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  transpilePackages: ['@normelya/core'],
+  transpilePackages: ['@normelya/core', '@normelya/sds-extraction'],
+  // La bibliothèque de lecture de PDF résout ses propres fichiers à l'exécution,
+  // notamment son processus de travail. Bundlée par Next, cette résolution
+  // échoue et toute lecture de document devient impossible côté serveur.
+  serverExternalPackages: ['pdfjs-dist'],
   typedRoutes: true,
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }]

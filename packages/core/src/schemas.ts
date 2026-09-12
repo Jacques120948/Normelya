@@ -240,3 +240,102 @@ export const uploadMetadataSchema = z.object({
     .positive()
     .max(MAX_UPLOAD_BYTES, 'Le fichier dépasse la taille maximale de 20 Mo.'),
 })
+
+/* ------------------------------------------------- Fiches de données de sécurité */
+
+/**
+ * Substance déclarée dans une fiche, après vérification humaine.
+ *
+ * Les concentrations sont conservées telles que déclarées : une plage reste une
+ * plage. Le choix de retenir la borne haute appartient au moteur réglementaire,
+ * pas à la saisie.
+ */
+export const validatedSubstanceSchema = z
+  .object({
+    declaredName: z.string().trim().min(1, 'Nom de la substance requis.').max(300),
+    casNumber: z
+      .string()
+      .trim()
+      .regex(/^\d{2,7}-\d{2}-\d$/, 'Numéro CAS invalide.')
+      .optional()
+      .or(z.literal('')),
+    ecNumber: z
+      .string()
+      .trim()
+      .regex(/^\d{3}-\d{3}-\d$/, 'Numéro CE invalide.')
+      .optional()
+      .or(z.literal('')),
+    concentrationMin: z.number().min(0).max(100).nullable(),
+    concentrationMax: z.number().min(0).max(100).nullable(),
+    concentrationExact: z.number().min(0).max(100).nullable(),
+    /** Classification telle que déclarée par le fournisseur, reprise sans interprétation. */
+    classificationText: z.string().trim().max(500).optional().or(z.literal('')),
+    /** Codes relevés, conservés comme chaînes : Normelya ne les interprète pas ici. */
+    hazardStatements: z.array(z.string().trim().max(20)).max(50).default([]),
+  })
+  .superRefine((value, ctx) => {
+    const declaree =
+      value.concentrationExact !== null ||
+      value.concentrationMin !== null ||
+      value.concentrationMax !== null
+    if (!declaree) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['concentrationMax'],
+        message: 'Indiquez une concentration, même approximative, ou retirez cette substance.',
+      })
+    }
+    if (
+      value.concentrationMin !== null &&
+      value.concentrationMax !== null &&
+      value.concentrationMin > value.concentrationMax
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['concentrationMin'],
+        message: 'Le minimum ne peut pas dépasser le maximum.',
+      })
+    }
+  })
+export type ValidatedSubstanceInput = z.infer<typeof validatedSubstanceSchema>
+
+/**
+ * Contenu d'une fiche après vérification humaine.
+ *
+ * C'est la seule charge utile que le moteur réglementaire acceptera de
+ * consommer. Rien de ce qui a été lu automatiquement n'y entre sans être passé
+ * sous les yeux d'une personne.
+ */
+export const validatedSdsPayloadSchema = z.object({
+  commercialName: z.string().trim().min(1, 'Nom commercial requis.').max(300),
+  supplierName: z.string().trim().max(300).optional().or(z.literal('')),
+  versionLabel: z.string().trim().min(1, 'Version requise.').max(50),
+  revisionDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date de révision invalide.')
+    .optional()
+    .or(z.literal('')),
+  language: z.string().trim().max(10).optional().or(z.literal('')),
+  flashPointCelsius: z.number().min(-100).max(1000).nullable(),
+  hazardStatements: z.array(z.string().trim().max(20)).max(100).default([]),
+  euhStatements: z.array(z.string().trim().max(20)).max(100).default([]),
+  precautionaryStatements: z.array(z.string().trim().max(30)).max(100).default([]),
+  substances: z.array(validatedSubstanceSchema).max(300).default([]),
+})
+export type ValidatedSdsPayload = z.infer<typeof validatedSdsPayloadSchema>
+
+/** Texte exact de la déclaration acceptée avant toute validation. */
+export const VALIDATION_STATEMENT = 'Je confirme avoir vérifié ces informations.'
+
+/**
+ * Validation d'une fiche.
+ *
+ * La confirmation est exigée côté serveur : une case cochée dans le navigateur
+ * n'engage rien tant que le serveur ne l'a pas reçue et enregistrée.
+ */
+export const validateSdsSchema = z.object({
+  payload: validatedSdsPayloadSchema,
+  confirmed: z.literal(true, {
+    errorMap: () => ({ message: 'Confirmez avoir vérifié les informations avant de valider.' }),
+  }),
+})

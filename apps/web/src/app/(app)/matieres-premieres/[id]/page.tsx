@@ -14,6 +14,7 @@ import { exigerAtelier } from '@/server/security/guard'
 import { findRawMaterial } from '@/server/repositories/raw-materials'
 import { archiverMatiereAction, modifierMatiereAction } from '../actions'
 import { FormulaireMatiere } from '../formulaire'
+import { FormulaireImport } from './fds/formulaire-import'
 
 export const metadata: Metadata = { title: 'Matière première' }
 export const dynamic = 'force-dynamic'
@@ -29,6 +30,26 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   )
 
   if (!matiere) notFound()
+
+  const versions = await db.withContext(
+    { userId: context.userId, organizationId: context.organizationId },
+    (client) =>
+      client.query<{
+        id: string
+        version_label: string
+        status: string
+        revision_date: string | null
+        original_filename: string
+      }>(
+        `SELECT v.id, v.version_label, v.status::text, v.revision_date, d.original_filename
+         FROM sds_versions v
+         JOIN safety_data_sheets f ON f.id = v.safety_data_sheet_id
+         JOIN documents d ON d.id = v.document_id
+         WHERE f.raw_material_id = $1 AND v.organization_id = $2
+         ORDER BY v.created_at DESC`,
+        [matiere.id, context.organizationId],
+      ),
+  )
 
   const modifiable = roleAtLeast(context.role, 'member')
   const prix =
@@ -80,14 +101,36 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             </Alert>
           ) : null}
 
-          <p className="text-sm text-[var(--color-ink-500)]">
-            L’import et la vérification des fiches de données de sécurité arrivent à l’étape
-            suivante du développement.
-          </p>
+          {versions.length > 0 ? (
+            <ul className="divide-y divide-[var(--color-ink-100)] rounded-[var(--radius-control)] border border-[var(--color-ink-100)]">
+              {versions.map((version) => (
+                <li key={version.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      Version {version.version_label}
+                      {version.revision_date
+                        ? ` · ${new Date(version.revision_date).toLocaleDateString('fr-FR')}`
+                        : ''}
+                    </p>
+                    <p className="text-xs text-[var(--color-ink-300)]">
+                      {version.original_filename}
+                    </p>
+                  </div>
+                  {version.status === 'validated' ? (
+                    <Badge tone="brand">Validée</Badge>
+                  ) : version.status === 'archived' ? (
+                    <Badge>Archivée</Badge>
+                  ) : (
+                    <Link href={`/matieres-premieres/${matiere.id}/fds/${version.id}`}>
+                      <Button size="sm">Vérifier</Button>
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : null}
 
-          <Button variant="secondary" disabled title="Disponible à la prochaine étape">
-            {fr.actions.importerFds}
-          </Button>
+          {modifiable ? <FormulaireImport matiereId={matiere.id} /> : null}
         </CardBody>
       </Card>
 
