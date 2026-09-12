@@ -17,10 +17,10 @@ parallèle ; la mise en vente, non.
 |-------|---------|------|
 | 0 | Architecture, dossier de conception, décisions | ✅ fait |
 | 1 | Authentification, organisations, base de données, sécurité initiale | ✅ fait |
-| 2 | Tableau de bord, matières premières | 🚧 en cours |
-| 3 | Import FDS, extraction, validation humaine | à venir |
+| 2 | Tableau de bord, matières premières | ✅ fait |
+| 3 | Import FDS, extraction, validation humaine | ⏸ point d'arrêt : validation humaine requise |
 | 4 | Produits, versions, recettes | à venir |
-| 5 | Moteur réglementaire | à venir |
+| 5 | Moteur réglementaire | ⏸ point d'arrêt : validation humaine requise |
 | 6 | Résultats, étiquettes | à venir |
 | 7 | PDF, documents, historique | à venir |
 | 8 | Stripe, plans, quotas | à venir |
@@ -43,11 +43,26 @@ Chaque phase se termine par : code + tests verts + documentation à jour + commi
 - onboarding et coquille de l'application (barre latérale, thème, composants)
 - tests : schémas, isolation, contrôle d'accès, limitation de débit
 
-### Phase 2 — Atelier
-Tableau de bord réel, matières premières, fournisseurs, catégories, documents
-rattachés, recherche, états.
+### Phase 2 — Atelier (terminée)
 
-### Phase 3 — FDS
+- tableau de bord alimenté par des chiffres réels, sans valeur estimée
+- matières premières : création, modification, archivage, recherche, filtres
+- fournisseurs créés à la volée, sans doublon
+- état du dossier documentaire par matière (manquant, à vérifier, validé)
+- centre de conformité, paramètres, suppression de compte, page abonnement
+- sections non développées annoncées honnêtement plutôt que masquées
+
+Une matière première n'est jamais supprimée : elle peut être citée par une
+recette ou une analyse déjà produite. L'archivage la retire des listes sans
+rompre la traçabilité.
+
+### Phase 3 — FDS — point d'arrêt
+
+Le développement s'arrête ici en attendant une validation humaine explicite
+(voir `CLAUDE.md`). L'import de fiches suppose de manipuler des données
+réglementaires : aucune table de mentions H, EUH ou P ne peut être écrite sans
+source vérifiée.
+
 Dépôt, contrôles d'entrée, extraction texte, segmentation, extraction structurée,
 contrôles de cohérence, écran de vérification avec extrait source, validation,
 versionnage, alertes de nouvelle version.
@@ -55,7 +70,11 @@ versionnage, alertes de nouvelle version.
 ### Phase 4 — Produits
 Création guidée, versions, recettes, contrôle du total, verrouillage à l'analyse.
 
-### Phase 5 — Moteur
+### Phase 5 — Moteur — point d'arrêt
+
+Aucune écriture dans `packages/regulatory-engine` sans validation humaine
+préalable. Le paquet reste volontairement vide.
+
 Sources, règles, calculateurs, seuils, UFI, traçabilité, tests exhaustifs,
 publication de la première version de moteur. **Dépend des validations humaines.**
 
