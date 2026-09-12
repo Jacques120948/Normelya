@@ -266,6 +266,14 @@ export async function deleteAccount(
       userAgent: meta.userAgent,
     })
 
+    // Les attestations de validation sont pseudonymisées, pas supprimées : le
+    // nom et l'adresse sont effacés, l'horodatage, l'empreinte des données
+    // validées, la version du moteur et l'identifiant technique du compte sont
+    // conservés, et la date de purge est posée à dix ans.
+    // Base légale : règlement (UE) 2016/679, article 17, paragraphe 3, point e).
+    // Voir docs/18-conservation-des-attestations.md
+    await client.query(`SELECT app.pseudonymize_attestations($1, now())`, [input.userId])
+
     // Mode effacement : seule situation où une ligne à valeur probante peut
     // être supprimée ou dissociée. Le paramètre ne vaut que pour cette
     // transaction et n'est posé que par ce cas d'usage.

@@ -22,6 +22,7 @@ l'écriture du code applicatif, conformément à la demande initiale.
 | 15 | [`15-jeu-de-tests-reference.md`](./15-jeu-de-tests-reference.md) | Jeu de tests de référence du moteur, à écrire avant toute règle |
 | 16 | [`16-corpus-fds.md`](./16-corpus-fds.md) | Corpus de fiches fournisseurs, mesure du taux de lecture |
 | 17 | [`17-sources-reglementaires.md`](./17-sources-reglementaires.md) | Registre des textes officiels et règles de citation |
+| 18 | [`18-conservation-des-attestations.md`](./18-conservation-des-attestations.md) | Pseudonymisation et purge des attestations de validation |
 
 Les décisions structurantes sont consignées sous forme d'ADR dans [`adr/`](./adr/).
 

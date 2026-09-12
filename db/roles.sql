@@ -48,6 +48,12 @@ REVOKE INSERT, UPDATE, DELETE ON TABLE audit_logs FROM normelya_app;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO normelya_service;
 
+-- Opérations d'effacement : pseudonymisation à la suppression d'un compte, et
+-- purge des attestations dont la durée de conservation est écoulée. Réservées
+-- au rôle de service : elles posent le mode effacement.
+GRANT EXECUTE ON FUNCTION app.pseudonymize_attestations(uuid, timestamptz) TO normelya_service;
+GRANT EXECUTE ON FUNCTION app.purge_expired_attestations(date) TO normelya_service;
+
 -- Tables du fournisseur d'authentification local (développement uniquement).
 -- Le rôle applicatif ne doit jamais les approcher : elles portent des
 -- empreintes de mots de passe et des jetons de session.

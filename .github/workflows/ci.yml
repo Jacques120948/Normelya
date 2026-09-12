@@ -45,6 +45,9 @@ jobs:
       - name: Contrôle du vocabulaire
         run: node scripts/verifier-vocabulaire.mjs
 
+      - name: Contrôle des exclusions
+        run: node scripts/verifier-exclusions.mjs
+
       - name: Vérification des types
         run: |
           npx tsc --build --force

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
+  assertNormative,
+  explanatorySources,
+  ExplanatorySourceMisuse,
   getSource,
+  normativeSources,
   REGULATORY_SOURCES,
   staleSources,
   VERIFICATION_VALIDITY_MONTHS,
@@ -47,8 +51,55 @@ describe('registre des sources', () => {
     expect(() => staleSources('pas-une-date')).toThrow(/invalide/)
   })
 
-  it('distingue un document d’information d’un texte normatif', () => {
-    // Une fiche d'information ne peut fonder aucune règle : la note doit le dire.
-    expect(REGULATORY_SOURCES.ECHA_FICHE_BOUGIES.notes).toContain('pas un texte normatif')
+  it('consigne le statut de chaque source dans sa note', () => {
+    expect(REGULATORY_SOURCES.ECHA_FICHE_BOUGIES.notes).toContain('COMPRÉHENSION SEULEMENT')
+  })
+})
+
+describe('hiérarchie des sources', () => {
+  it('classe chaque source comme texte consolidé ou document de compréhension', () => {
+    for (const source of Object.values(REGULATORY_SOURCES)) {
+      expect(['normative', 'explanatory'], source.id).toContain(source.status)
+    }
+  })
+
+  it('range la fiche d’information parmi les documents de compréhension', () => {
+    expect(REGULATORY_SOURCES.ECHA_FICHE_BOUGIES.status).toBe('explanatory')
+    expect(explanatorySources().map((s) => s.id)).toEqual(['ECHA_FICHE_BOUGIES'])
+  })
+
+  it('range les règlements et l’ordonnance parmi les textes consolidés', () => {
+    expect(normativeSources().map((s) => s.id).sort()).toEqual([
+      'CH_ORDONNANCE_2015_366',
+      'EU_CLP_1272_2008',
+      'EU_REACH_1907_2006',
+    ])
+  })
+
+  it('refuse de tirer une valeur d’un document de compréhension', () => {
+    // Garde-fou : même si la valeur cherchée y figure noir sur blanc.
+    expect(() => assertNormative('ECHA_FICHE_BOUGIES')).toThrow(ExplanatorySourceMisuse)
+    expect(() => assertNormative('ECHA_FICHE_BOUGIES')).toThrow(/pas un texte consolidé/)
+  })
+
+  it('laisse tirer une valeur d’un texte consolidé', () => {
+    expect(assertNormative('EU_REACH_1907_2006').reference).toBe('CELEX 02006R1907')
+    expect(assertNormative('EU_CLP_1272_2008').status).toBe('normative')
+  })
+
+  it('rend visible l’antériorité d’un document de compréhension', () => {
+    const fiche = REGULATORY_SOURCES.ECHA_FICHE_BOUGIES
+    expect(fiche.publishedOn).toBe('2024-08')
+
+    // Le document est antérieur aux deux textes qu'il commente.
+    expect(fiche.publishedOn! < '2026-06').toBe(true)
+    expect(fiche.notes).toContain('antérieur')
+    expect(fiche.notes).toContain('le texte consolidé prime')
+  })
+
+  it('n’exige une date de publication que des documents de compréhension', () => {
+    for (const source of explanatorySources()) {
+      expect(source.publishedOn, source.id).toBeDefined()
+    }
   })
 })

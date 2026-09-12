@@ -103,6 +103,24 @@ incombant à l'utilisateur, plafonnement de responsabilité, absence
 de garantie de conformité, engagement de non-utilisation des
 formulations clients.
 
+## Hiérarchie des sources
+Guides et brochures pour comprendre, textes consolidés pour les
+valeurs.
+
+- Un texte consolidé (règlement, ordonnance) est la SEULE source dont
+  on extrait une valeur réglementaire : seuil, mention, pictogramme,
+  classification, structure documentaire.
+- Un guide, une brochure, une fiche d'information ou une note
+  d'agence sert UNIQUEMENT à comprendre : repérer une question,
+  éclairer une notion, orienter une recherche. On n'en extrait aucune
+  valeur, même si elle y figure noir sur blanc.
+- Ces documents sont souvent antérieurs à la dernière consolidation.
+  Exemple : Factsheet ECHA_bougie_fr_0.pdf date d'août 2024, donc
+  antérieure au CLP consolidé (01/07/2026) et à REACH consolidé
+  (22/06/2026).
+- En cas de divergence entre un guide et le texte consolidé, c'est le
+  texte consolidé qui prime, et la divergence doit être signalée.
+
 ## Données de démonstration
 Toute donnée fictive est préfixée DEMO et ne doit jamais alimenter
 le moteur réglementaire.

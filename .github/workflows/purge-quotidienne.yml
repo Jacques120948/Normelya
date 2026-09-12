@@ -1,0 +1,46 @@
+name: Purge des données échues
+
+# La conservation des attestations est bornée à dix ans après la suppression du
+# compte. Cette purge est automatique : une conservation qui dépendrait d'un
+# geste humain ne serait pas une politique de conservation.
+#
+# Voir docs/18-conservation-des-attestations.md
+on:
+  schedule:
+    # Chaque jour à 3 h 15 UTC, hors heure de pointe.
+    - cron: '15 3 * * *'
+  workflow_dispatch:
+    inputs:
+      simulation:
+        description: 'Simuler sans rien supprimer'
+        type: boolean
+        default: true
+
+jobs:
+  purge:
+    name: Attestations dont la conservation est échue
+    runs-on: ubuntu-latest
+    # Le secret n'est disponible que dans cet environnement, soumis aux
+    # protections configurées sur le dépôt.
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Purge
+        run: |
+          if [ "${{ inputs.simulation }}" = "true" ]; then
+            npm run purger -- --simulation
+          else
+            npm run purger
+          fi
+        env:
+          # Rôle de service : seul habilité à exécuter une opération d'effacement.
+          SERVICE_DATABASE_URL: ${{ secrets.SERVICE_DATABASE_URL }}
