@@ -18,10 +18,14 @@ test-results/
 
 # Corpus de fiches de données de sécurité fournisseur.
 # Ces documents appartiennent aux fournisseurs et peuvent contenir des données
-# commercialement sensibles. Ils ne sont JAMAIS versionnés.
-# Voir docs/16-corpus-fds.md pour leur emplacement attendu.
-/fixtures-fds/
-fixtures-fds/
+# commercialement sensibles. Ils ne sont JAMAIS versionnés — seul le fichier
+# d'explication du dossier l'est.
+# Voir docs/16-corpus-fds.md.
+/fixtures-fds/**
+!/fixtures-fds/README.md
 *.fds.pdf
+
+# Rapports de mesure : ils nomment des fichiers fournisseurs.
+rapport-lecture.json
 /.tmp/
 apps/web/.tmp/
