@@ -15,3 +15,11 @@ coverage/
 playwright-report/
 test-results/
 .tmp/
+
+# Corpus de fiches de données de sécurité fournisseur.
+# Ces documents appartiennent aux fournisseurs et peuvent contenir des données
+# commercialement sensibles. Ils ne sont JAMAIS versionnés.
+# Voir docs/16-corpus-fds.md pour leur emplacement attendu.
+/fixtures-fds/
+fixtures-fds/
+*.fds.pdf

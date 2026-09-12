@@ -20,6 +20,7 @@ l'écriture du code applicatif, conformément à la demande initiale.
 | 13 | [`13-differenciation.md`](./13-differenciation.md) | Différenciation par rapport aux solutions existantes |
 | 14 | [`14-recommandations.md`](./14-recommandations.md) | Recommandations avant développement, décisions à trancher |
 | 15 | [`15-jeu-de-tests-reference.md`](./15-jeu-de-tests-reference.md) | Jeu de tests de référence du moteur, à écrire avant toute règle |
+| 16 | [`16-corpus-fds.md`](./16-corpus-fds.md) | Corpus de fiches fournisseurs, mesure du taux de lecture |
 
 Les décisions structurantes sont consignées sous forme d'ADR dans [`adr/`](./adr/).
 

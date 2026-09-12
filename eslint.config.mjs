@@ -27,7 +27,7 @@ export default tseslint.config(
   },
   {
     // Scripts Node exécutés en ligne de commande.
-    files: ['scripts/**/*.mjs'],
+    files: ['scripts/**/*.mjs', 'scripts/**/*.ts'],
     languageOptions: {
       globals: { process: 'readonly', console: 'readonly' },
     },
