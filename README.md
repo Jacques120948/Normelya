@@ -69,7 +69,41 @@ npm run dev
 | `npm run db:migrate` | Application des migrations |
 | `npm run verifier:secrets` | Contrôle qu'aucun secret ne fuit côté client |
 | `npm run verifier:vocabulaire` | Contrôle qu'aucun terme interdit n'atteint l'utilisateur |
+| `npm run test:e2e` | Parcours de bout en bout, dans un vrai navigateur |
+| `npm run mesurer:corpus` | Taux de lecture automatique sur le corpus de fiches |
 | `npm run check` | Tout ce qui précède, comme en intégration continue |
+
+### Développer sans service externe
+
+L'application sait fonctionner sans fournisseur d'authentification ni stockage
+objet, ce qui permet d'exécuter le parcours complet en local :
+
+```bash
+AUTH_PROVIDER=local
+STORAGE_PROVIDER=local
+MAIL_PROVIDER=console
+```
+
+Ces adaptateurs sont réservés au développement. Ils refusent de s'instancier
+lorsque `NODE_ENV` vaut `production`, et un contrôle supplémentaire rejette la
+configuration au démarrage. Ils existent aussi pour vérifier que les ports
+tiennent leur promesse : changer de fournisseur ne demande qu'une implémentation
+d'interface.
+
+### Tests de bout en bout
+
+```bash
+npm run test:e2e
+```
+
+Ils s'exécutent dans un vrai navigateur, contre l'application réellement
+démarrée et une vraie base. Le parcours couvert va de l'inscription à la
+suppression de compte, en passant par l'onboarding, la déconnexion et la
+reconnexion. Une seconde suite vérifie que la politique de contenu de production
+ne casse pas l'interactivité.
+
+Si l'environnement fournit déjà un navigateur, le désigner avec
+`PLAYWRIGHT_CHROMIUM_PATH` évite tout téléchargement.
 
 ### Tests d'intégration base de données
 
@@ -111,6 +145,10 @@ recours, et la méthode employée est journalisée pour chaque document.
 - Validation humaine enregistrée en append-only avant toute génération de
   document : utilisateur, horodatage, empreinte des données validées, version du
   moteur.
+- Immuabilité des traces conciliée avec le droit à l'effacement : une trace peut
+  être dissociée d'un compte supprimé, jamais réécrite ni réaffectée. La
+  suppression d'une ligne à valeur probante n'est possible que pendant une
+  opération d'effacement explicite, elle-même journalisée au préalable.
 
 ## Avertissement
 

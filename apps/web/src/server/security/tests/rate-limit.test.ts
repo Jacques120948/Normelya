@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   InMemoryRateLimiter,
-  RATE_LIMIT_RULES,
+  rateLimitFactor,
   rateLimitKey,
+  STRICT_RATE_LIMIT_RULES,
 } from '../rate-limit'
 
 /** Horloge contrôlée : aucun test ne dépend du temps réel. */
@@ -76,11 +77,33 @@ describe('limitation de débit', () => {
   })
 
   it('protège les points sensibles avec des règles strictes', () => {
-    expect(RATE_LIMIT_RULES.signIn.limit).toBeLessThanOrEqual(10)
-    expect(RATE_LIMIT_RULES.passwordReset.limit).toBeLessThanOrEqual(5)
-    expect(RATE_LIMIT_RULES.resendVerification.limit).toBeLessThanOrEqual(3)
+    expect(STRICT_RATE_LIMIT_RULES.signIn.limit).toBeLessThanOrEqual(10)
+    expect(STRICT_RATE_LIMIT_RULES.passwordReset.limit).toBeLessThanOrEqual(5)
+    expect(STRICT_RATE_LIMIT_RULES.resendVerification.limit).toBeLessThanOrEqual(3)
     // La fenêtre de connexion couvre au moins un quart d'heure.
-    expect(RATE_LIMIT_RULES.signIn.windowMs).toBeGreaterThanOrEqual(15 * 60_000)
+    expect(STRICT_RATE_LIMIT_RULES.signIn.windowMs).toBeGreaterThanOrEqual(15 * 60_000)
+  })
+
+  describe('assouplissement hors production', () => {
+    it('vaut 1 par défaut', () => {
+      expect(rateLimitFactor({})).toBe(1)
+    })
+
+    it('accepte un facteur en développement', () => {
+      expect(rateLimitFactor({ NODE_ENV: 'development', RATE_LIMIT_FACTOR: '50' })).toBe(50)
+    })
+
+    it('ignore le facteur en production, quelle que soit la variable', () => {
+      // Aucun moyen d'affaiblir ces limites sur l'environnement réel.
+      expect(rateLimitFactor({ NODE_ENV: 'production', RATE_LIMIT_FACTOR: '1000' })).toBe(1)
+    })
+
+    it('refuse un facteur absurde ou inférieur à 1', () => {
+      expect(rateLimitFactor({ NODE_ENV: 'development', RATE_LIMIT_FACTOR: '0' })).toBe(1)
+      expect(rateLimitFactor({ NODE_ENV: 'development', RATE_LIMIT_FACTOR: '-5' })).toBe(1)
+      expect(rateLimitFactor({ NODE_ENV: 'development', RATE_LIMIT_FACTOR: 'beaucoup' })).toBe(1)
+      expect(rateLimitFactor({ NODE_ENV: 'development', RATE_LIMIT_FACTOR: '99999' })).toBe(1000)
+    })
   })
 
   it('construit une clé à partir de l’action et d’un identifiant', () => {

@@ -222,7 +222,16 @@ export function Field({
     <div className="space-y-1.5">
       <label htmlFor={htmlFor} className="block text-sm font-medium text-[var(--color-ink-700)]">
         {label}
-        {required ? <span className="ml-0.5 text-[var(--color-status-danger)]">*</span> : null}
+        {/*
+          L'astérisque est décoratif : il fait doublon avec l'attribut required,
+          déjà annoncé par les lecteurs d'écran. Sans aria-hidden, il entrerait
+          dans le nom accessible du champ, qui deviendrait « Nom * ».
+        */}
+        {required ? (
+          <span aria-hidden="true" className="ml-0.5 text-[var(--color-status-danger)]">
+            *
+          </span>
+        ) : null}
       </label>
       {children}
       {hint && !error ? <p className="text-xs text-[var(--color-ink-300)]">{hint}</p> : null}

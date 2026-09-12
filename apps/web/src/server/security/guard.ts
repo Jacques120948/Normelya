@@ -13,10 +13,10 @@ import { resolveSession, type ResolvedUser, type SessionState } from './request-
  */
 
 export async function chargerSession(): Promise<SessionState> {
-  const { auth, db } = services()
+  const { auth, serviceDb } = services()
   return resolveSession({
     auth,
-    db,
+    serviceDb,
     accessToken: await readAccessToken(),
     preferredOrganizationId: await readActiveOrganizationId(),
   })

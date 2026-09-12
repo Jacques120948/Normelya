@@ -301,9 +301,24 @@ CREATE POLICY <table>_write ON <table> FOR INSERT
 -- UPDATE/DELETE (donc tout est refusé, y compris au propriétaire).
 ```
 
-Le rôle applicatif n'est **pas** propriétaire des tables et ne possède pas
-`BYPASSRLS`. Un rôle de service distinct, utilisé uniquement par les migrations
-et les webhooks, est le seul à pouvoir écrire dans `payment_events`.
+Deux rôles, une seule différence qui compte :
+
+| Rôle | `BYPASSRLS` | Sert |
+|------|-------------|------|
+| `normelya_app` | **non** | Toutes les requêtes déclenchées par un utilisateur |
+| `normelya_service` | oui | Création de compte, journal d'audit, webhooks de paiement |
+
+Le rôle de service contourne les politiques parce qu'il écrit dans des tables
+qui n'appartiennent à aucune organisation : créer un utilisateur avant qu'il
+ait un atelier en est l'exemple type, et aucune politique fondée sur
+l'appartenance ne peut l'autoriser.
+
+En contrepartie, le code qui l'emploie est limité à ces cas d'usage et
+n'accepte jamais d'identifiant d'organisation venu du client. Tout ce qui
+touche aux données d'un atelier passe par `normelya_app`, qui subit les
+politiques sans exception possible.
+
+Aucun des deux n'est propriétaire des tables.
 
 Les tests d'isolation (deux organisations, une requête croisée attendue vide)
 font partie de la suite obligatoire.

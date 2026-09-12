@@ -18,6 +18,12 @@ const serverSchema = z.object({
   // ce qui n'est acceptable qu'en développement.
   SERVICE_DATABASE_URL: z.string().optional(),
 
+  // Choix des adaptateurs. Les implémentations locales sont réservées au
+  // développement et refusées en production.
+  AUTH_PROVIDER: z.enum(['supabase', 'local']).default('supabase'),
+  STORAGE_PROVIDER: z.enum(['supabase', 'local']).default('supabase'),
+  LOCAL_STORAGE_DIR: z.string().default('.tmp/documents'),
+
   // Fournisseur d'authentification et de stockage (adaptateur Supabase).
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_ANON_KEY: z.string().optional(),
@@ -54,6 +60,14 @@ export function serverEnv(): ServerEnv {
     const details = parsed.error.issues.map((i) => `${i.path.join('.')} : ${i.message}`).join('\n')
     throw new Error(`Configuration invalide :\n${details}`)
   }
+  if (parsed.data.NODE_ENV === 'production') {
+    if (parsed.data.AUTH_PROVIDER === 'local' || parsed.data.STORAGE_PROVIDER === 'local') {
+      throw new Error(
+        'Les adaptateurs locaux sont réservés au développement et ne peuvent pas servir en production.',
+      )
+    }
+  }
+
   cached = parsed.data
   return cached
 }

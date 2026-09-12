@@ -36,9 +36,25 @@ type MembershipRow = {
   plan_code: PlanCode | null
 }
 
+/**
+ * Résout la session à partir du jeton d'accès.
+ *
+ * La lecture initiale passe par le rôle de service, et non par le rôle
+ * applicatif. Ce n'est pas un contournement de commodité : les politiques
+ * d'isolation reposent sur l'appartenance à une organisation, or à cet instant
+ * précis on cherche justement à savoir qui est l'utilisateur et à quelles
+ * organisations il appartient. Aucune politique fondée sur l'appartenance ne
+ * peut autoriser cette lecture-là.
+ *
+ * Le seul paramètre employé est le sujet d'authentification, qui provient du
+ * jeton déjà vérifié par le fournisseur — jamais d'une valeur transmise par le
+ * client. Une fois la session résolue, toutes les requêtes métier repassent par
+ * le rôle applicatif, avec le contexte posé et les politiques actives.
+ */
 export async function resolveSession(deps: {
   auth: AuthProvider
-  db: Database
+  /** Connexion de service : voir le commentaire ci-dessus. */
+  serviceDb: Database
   accessToken: string | null
   preferredOrganizationId: string | null
 }): Promise<SessionState> {
@@ -49,7 +65,7 @@ export async function resolveSession(deps: {
 
   // La fiche applicative est la référence : elle porte le profil, la langue et
   // le statut d'administrateur de plateforme, jamais lus depuis le jeton.
-  const row = await deps.db.queryOne<{
+  const row = await deps.serviceDb.queryOne<{
     id: string
     email: string
     email_verified_at: Date | null
@@ -78,7 +94,7 @@ export async function resolveSession(deps: {
 
   if (!user.emailVerified) return { kind: 'unverified', user }
 
-  const memberships = await deps.db.query<MembershipRow>(
+  const memberships = await deps.serviceDb.query<MembershipRow>(
     `SELECT m.organization_id, m.role, o.onboarding_completed_at, o.default_locale,
             p.code AS plan_code
      FROM organization_members m

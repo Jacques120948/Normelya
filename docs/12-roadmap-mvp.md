@@ -18,7 +18,7 @@ parallèle ; la mise en vente, non.
 | 0 | Architecture, dossier de conception, décisions | ✅ fait |
 | 1 | Authentification, organisations, base de données, sécurité initiale | ✅ fait |
 | 2 | Tableau de bord, matières premières | ✅ fait |
-| 3 | Import FDS, extraction, validation humaine | ⏸ point d'arrêt : validation humaine requise |
+| 3 | Import FDS, extraction, validation humaine | 🚧 lecteur livré, intégration applicative à venir |
 | 4 | Produits, versions, recettes | à venir |
 | 5 | Moteur réglementaire | ⏸ point d'arrêt : validation humaine requise |
 | 6 | Résultats, étiquettes | à venir |

@@ -34,15 +34,18 @@ export default async function Page({
   const parametres = await searchParams
   const { db } = services()
 
-  const [compteurs, produits, alertes, documents] = await db.withContext(
+  // Les requêtes sont séquentielles : elles partagent une même transaction, et
+  // une connexion PostgreSQL ne traite qu'une requête à la fois. Les lancer en
+  // parallèle sur le même client produit un avertissement du pilote et, sous
+  // charge, des résultats entremêlés.
+  const { compteurs, produits, alertes, documents } = await db.withContext(
     { userId: context.userId, organizationId: context.organizationId },
-    async (client) =>
-      Promise.all([
-        dashboardCounts(client, context.organizationId),
-        recentProducts(client, context.organizationId),
-        openNotifications(client, context.organizationId),
-        recentDocuments(client, context.organizationId),
-      ]),
+    async (client) => ({
+      compteurs: await dashboardCounts(client, context.organizationId),
+      produits: await recentProducts(client, context.organizationId),
+      alertes: await openNotifications(client, context.organizationId),
+      documents: await recentDocuments(client, context.organizationId),
+    }),
   )
 
   return (

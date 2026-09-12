@@ -2,6 +2,8 @@ import { serverEnv } from './env'
 import { PostgresDatabase } from './adapters/postgres-database'
 import { SupabaseAuthProvider } from './adapters/supabase-auth'
 import { SupabaseFileStorage } from './adapters/supabase-storage'
+import { LocalAuthProvider } from './adapters/local-auth'
+import { LocalFileStorage } from './adapters/local-storage'
 import { ConsoleMailSender, ResendMailSender } from './adapters/mail'
 import { InMemoryRateLimiter } from './security/rate-limit'
 import type { AuthProvider } from './ports/auth'
@@ -38,28 +40,8 @@ export function services(): Services {
     ? new PostgresDatabase(env.SERVICE_DATABASE_URL, { max: 4 })
     : db
 
-  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
-    throw new Error(
-      "SUPABASE_URL et SUPABASE_ANON_KEY sont requis pour l'authentification. " +
-        'Voir .env.example.',
-    )
-  }
-
-  const auth = new SupabaseAuthProvider({
-    url: env.SUPABASE_URL,
-    anonKey: env.SUPABASE_ANON_KEY,
-    serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
-  })
-
-  if (!env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY est requis pour le stockage privé des documents.')
-  }
-
-  const storage = new SupabaseFileStorage({
-    url: env.SUPABASE_URL,
-    serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
-    bucket: env.SUPABASE_STORAGE_BUCKET,
-  })
+  const auth = construireAuth(env, serviceDb)
+  const storage = construireStockage(env)
 
   const mail: MailSender =
     env.MAIL_PROVIDER === 'resend' && env.RESEND_API_KEY
@@ -68,6 +50,42 @@ export function services(): Services {
 
   instance = { db, serviceDb, auth, storage, mail, rateLimiter: new InMemoryRateLimiter() }
   return instance
+}
+
+function construireAuth(env: ReturnType<typeof serverEnv>, serviceDb: Database): AuthProvider {
+  if (env.AUTH_PROVIDER === 'local') return new LocalAuthProvider(serviceDb)
+
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+    throw new Error(
+      "SUPABASE_URL et SUPABASE_ANON_KEY sont requis pour l'authentification. " +
+        'Pour travailler sans service externe, posez AUTH_PROVIDER=local. Voir .env.example.',
+    )
+  }
+
+  return new SupabaseAuthProvider({
+    url: env.SUPABASE_URL,
+    anonKey: env.SUPABASE_ANON_KEY,
+    serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
+  })
+}
+
+function construireStockage(env: ReturnType<typeof serverEnv>): FileStorage {
+  if (env.STORAGE_PROVIDER === 'local') {
+    return new LocalFileStorage({ directory: env.LOCAL_STORAGE_DIR })
+  }
+
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error(
+      'SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis pour le stockage privé des documents. ' +
+        'Pour travailler sans service externe, posez STORAGE_PROVIDER=local.',
+    )
+  }
+
+  return new SupabaseFileStorage({
+    url: env.SUPABASE_URL,
+    serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
+    bucket: env.SUPABASE_STORAGE_BUCKET,
+  })
 }
 
 /** Injecte des implémentations de substitution. Réservé aux tests. */

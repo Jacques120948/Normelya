@@ -254,6 +254,8 @@ export async function deleteAccount(
   meta: RequestMeta = {},
 ): Promise<Result<void, AppError>> {
   await deps.serviceDb.transaction(async (client) => {
+    // La trace de l'effacement est écrite AVANT l'effacement lui-même, tant que
+    // le compte existe encore.
     await recordAudit(client, {
       organizationId: null,
       actorUserId: input.userId,
@@ -263,6 +265,11 @@ export async function deleteAccount(
       ip: meta.ip,
       userAgent: meta.userAgent,
     })
+
+    // Mode effacement : seule situation où une ligne à valeur probante peut
+    // être supprimée ou dissociée. Le paramètre ne vaut que pour cette
+    // transaction et n'est posé que par ce cas d'usage.
+    await client.query(`SELECT set_config('app.erasure_mode', 'on', true)`)
 
     // Les organisations dont l'utilisateur est le seul membre sont supprimées
     // avec lui ; les autres lui survivent.
