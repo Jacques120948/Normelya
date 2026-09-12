@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { AppError } from '@normelya/core'
 import type { DatabaseClient } from '../../ports/database'
-import { assertWithinQuota, currentUsage } from '../quotas'
+import { assertCanCreateProduct, assertWithinQuota, currentUsage } from '../quotas'
 
 function clientAvec(valeurs: Record<string, string>): DatabaseClient {
   return {
@@ -82,5 +82,55 @@ describe('quotas d’offre', () => {
         metric: 'storage_bytes',
       }),
     ).rejects.toThrow(/500 Mo/)
+  })
+})
+
+describe('quota non renouvelable de l’offre gratuite', () => {
+  function clientAvecCompteurs(valeurs: { actifs?: string; cumules?: string }): DatabaseClient {
+    return {
+      query: async () => [],
+      queryOne: async (sql: string) => {
+        if (sql.includes('FROM products')) return { total: valeurs.actifs ?? '0' }
+        if (sql.includes("metric = 'lifetime_products'")) return { value: valeurs.cumules ?? '0' }
+        return null
+      },
+    } as DatabaseClient
+  }
+
+  it('laisse créer les trois premiers produits', async () => {
+    await expect(
+      assertCanCreateProduct(clientAvecCompteurs({ actifs: '2', cumules: '2' }), {
+        organizationId: 'org-1',
+        plan: 'free',
+      }),
+    ).resolves.toBeUndefined()
+  })
+
+  it('refuse le quatrième produit même si les trois premiers sont archivés', async () => {
+    // Aucun produit actif : le plafond d'actifs passe. Le plafond cumulatif bloque.
+    await expect(
+      assertCanCreateProduct(clientAvecCompteurs({ actifs: '0', cumules: '3' }), {
+        organizationId: 'org-1',
+        plan: 'free',
+      }),
+    ).rejects.toThrow(/n’est pas renouvelable/)
+  })
+
+  it('n’applique aucun plafond cumulatif aux offres payantes', async () => {
+    await expect(
+      assertCanCreateProduct(clientAvecCompteurs({ actifs: '14', cumules: '9999' }), {
+        organizationId: 'org-1',
+        plan: 'essential',
+      }),
+    ).resolves.toBeUndefined()
+  })
+
+  it('applique le plafond de quinze produits actifs sur l’offre Essentiel', async () => {
+    await expect(
+      assertCanCreateProduct(clientAvecCompteurs({ actifs: '15', cumules: '9999' }), {
+        organizationId: 'org-1',
+        plan: 'essential',
+      }),
+    ).rejects.toThrow(/15 produits actifs/)
   })
 })

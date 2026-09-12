@@ -34,6 +34,40 @@ export default tseslint.config(
     rules: { 'no-console': 'off' },
   },
   {
+    // Frontière de confidentialité : aucun client de modèle de langage ne peut
+    // être importé hors de src/server/ai/. Ce dossier est le seul point de
+    // sortie vers un fournisseur d'IA, et il n'accepte qu'un type marqué
+    // représentant un document fournisseur.
+    files: ['apps/**/*.ts', 'apps/**/*.tsx', 'packages/**/*.ts'],
+    ignores: ['apps/web/src/server/ai/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '@anthropic-ai/*',
+                'openai',
+                'openai/*',
+                '@google/generative-ai',
+                '@mistralai/*',
+                'cohere-ai',
+                'ollama',
+                '@huggingface/*',
+                'langchain',
+                'langchain/*',
+                '@langchain/*',
+              ],
+              message:
+                "Appel de modèle interdit ici. Tout passe par apps/web/src/server/ai/, qui n'accepte qu'un document fournisseur. Aucune recette ni aucun pourcentage client ne doit atteindre un modèle.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Le moteur réglementaire ne doit dépendre de rien : aucun import relatif
     // hors du paquet, aucune API d'entrée/sortie, aucune source de non-déterminisme.
     files: ['packages/regulatory-engine/src/**/*.ts'],

@@ -21,8 +21,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "db:migrate": "node scripts/migrate.mjs",
-    "check": "npm run verifier:secrets && npm run typecheck && npm run lint && npm run test",
-    "verifier:secrets": "node scripts/verifier-secrets.mjs"
+    "check": "npm run verifier:secrets && npm run verifier:vocabulaire && npm run typecheck && npm run lint && npm run test",
+    "verifier:secrets": "node scripts/verifier-secrets.mjs",
+    "verifier:vocabulaire": "node scripts/verifier-vocabulaire.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

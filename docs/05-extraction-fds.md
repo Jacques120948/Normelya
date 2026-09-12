@@ -62,7 +62,43 @@ PDF déposé
          Case obligatoire : « Je confirme avoir vérifié ces informations. »
 ```
 
+## 5.2 bis Frontière de confidentialité
+
+C'est un engagement commercial autant que technique, et il est appliqué par le
+code, pas par une convention.
+
+**Aucun appel à un modèle ne reçoit une recette, une formulation ou un
+pourcentage client. Jamais.** Ce qu'un modèle peut recevoir se limite au texte
+d'un document **fournisseur** que l'utilisateur a téléchargé : une fiche de
+données de sécurité, un certificat IFRA, une déclaration d'allergènes.
+
+Trois verrous, cumulatifs :
+
+1. **Le type.** `apps/web/src/server/ai/boundary.ts` expose un type marqué
+   `SupplierDocumentText`, seule valeur qu'un fournisseur d'extraction accepte.
+   Ce type ne peut être construit que par `fromSupplierDocument()`, qui exige
+   l'identifiant du document, son empreinte et un type de document admissible.
+   Une chaîne de caractères ordinaire, donc une recette, ne compile pas.
+2. **L'exécution.** Avant toute sortie réseau, le contenu est revérifié :
+   structure du document, absence de marqueur de formulation client, et
+   antériorité d'une tentative de lecture déterministe. Un contenu douteux est
+   **refusé**, jamais nettoyé : le parcours bascule alors sur la saisie manuelle.
+3. **Le lint.** Aucun module hors de `src/server/ai/` ne peut importer un client
+   de modèle. La règle est dans `eslint.config.mjs` et échoue le build.
+
+L'assistance est en outre désactivable pour tout un atelier : dans ce mode, aucun
+contenu ne quitte l'infrastructure Normelya.
+
 ## 5.3 Politique d'usage de l'IA dans l'extraction
+
+**L'analyse déterministe est la méthode principale, le modèle est un recours.**
+L'ordre d'essai est imposé par le code : lecture du texte du PDF, puis
+reconnaissance optique si nécessaire, puis seulement assistance par modèle. Un
+appel de modèle sans tentative déterministe préalable lève une erreur.
+
+La méthode réellement employée est journalisée pour chaque tentative, dans
+`sds_extraction_runs` : on doit pouvoir prouver, document par document, qu'un
+modèle n'a été sollicité qu'en dernier recours.
 
 | Situation | Traitement |
 |-----------|------------|

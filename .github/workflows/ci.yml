@@ -42,6 +42,9 @@ jobs:
       - name: Contrôle des secrets
         run: node scripts/verifier-secrets.mjs
 
+      - name: Contrôle du vocabulaire
+        run: node scripts/verifier-vocabulaire.mjs
+
       - name: Vérification des types
         run: |
           npx tsc --build --force

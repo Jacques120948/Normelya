@@ -13,6 +13,7 @@ export type PlanFeature =
   | 'sds_import'
   | 'regulatory_analysis'
   | 'labels'
+  | 'product_sds'
   | 'history'
   | 'ufi'
   | 'document_archive'
@@ -29,11 +30,21 @@ export type PlanDefinition = {
   priceMonthlyCents: number
   priceYearlyCents: number
   currency: 'EUR'
-  /** null = illimité */
+  /**
+   * Nombre de produits actifs simultanément. null = illimité.
+   */
   maxActiveProducts: number | null
+  /**
+   * Nombre total de produits créables sur la durée de vie du compte.
+   * null = pas de plafond cumulatif.
+   *
+   * L'offre gratuite utilise ce plafond : ses 3 produits ne sont PAS
+   * renouvelables, archiver un produit ne libère pas de place.
+   */
+  maxLifetimeProducts: number | null
   maxMembers: number
   maxStorageMb: number
-  /** Extractions assistées par IA incluses par mois (0 = extraction algorithmique seule). */
+  /** Extractions de FDS fournisseur assistées par IA, incluses par mois. */
   monthlyAiExtractions: number
   features: readonly PlanFeature[]
 }
@@ -47,11 +58,12 @@ export const PLANS: Record<PlanCode, PlanDefinition> = {
   free: {
     code: 'free',
     name: 'Gratuit',
-    tagline: 'Pour tester réellement Normelya.',
+    tagline: 'Trois produits documentés, pour évaluer réellement Normelya.',
     priceMonthlyCents: 0,
     priceYearlyCents: 0,
     currency: 'EUR',
     maxActiveProducts: 3,
+    maxLifetimeProducts: 3,
     maxMembers: 1,
     maxStorageMb: 100,
     monthlyAiExtractions: 5,
@@ -61,10 +73,11 @@ export const PLANS: Record<PlanCode, PlanDefinition> = {
     code: 'essential',
     name: 'Essentiel',
     tagline: 'Pour une petite gamme de produits.',
-    priceMonthlyCents: 990,
-    priceYearlyCents: yearlyFromMonthly(990),
+    priceMonthlyCents: 900,
+    priceYearlyCents: yearlyFromMonthly(900),
     currency: 'EUR',
-    maxActiveProducts: 10,
+    maxActiveProducts: 15,
+    maxLifetimeProducts: null,
     maxMembers: 1,
     maxStorageMb: 500,
     monthlyAiExtractions: 25,
@@ -73,11 +86,12 @@ export const PLANS: Record<PlanCode, PlanDefinition> = {
   pro: {
     code: 'pro',
     name: 'Pro',
-    tagline: 'Pour une marque qui se développe.',
-    priceMonthlyCents: 1990,
-    priceYearlyCents: yearlyFromMonthly(1990),
+    tagline: 'Produits illimités, avec la FDS du produit dilué et l’UFI.',
+    priceMonthlyCents: 1500,
+    priceYearlyCents: yearlyFromMonthly(1500),
     currency: 'EUR',
     maxActiveProducts: null,
+    maxLifetimeProducts: null,
     maxMembers: 2,
     maxStorageMb: 2000,
     monthlyAiExtractions: 100,
@@ -85,6 +99,7 @@ export const PLANS: Record<PlanCode, PlanDefinition> = {
       'sds_import',
       'regulatory_analysis',
       'labels',
+      'product_sds',
       'history',
       'ufi',
       'document_archive',
@@ -95,11 +110,12 @@ export const PLANS: Record<PlanCode, PlanDefinition> = {
   atelier: {
     code: 'atelier',
     name: 'Atelier',
-    tagline: 'Pour un atelier qui produit en lots.',
-    priceMonthlyCents: 2990,
-    priceYearlyCents: yearlyFromMonthly(2990),
+    tagline: 'Tout Pro, plus les lots, la traçabilité et les coûts.',
+    priceMonthlyCents: 2500,
+    priceYearlyCents: yearlyFromMonthly(2500),
     currency: 'EUR',
     maxActiveProducts: null,
+    maxLifetimeProducts: null,
     maxMembers: 5,
     maxStorageMb: 10000,
     monthlyAiExtractions: 250,
@@ -107,6 +123,7 @@ export const PLANS: Record<PlanCode, PlanDefinition> = {
       'sds_import',
       'regulatory_analysis',
       'labels',
+      'product_sds',
       'history',
       'ufi',
       'document_archive',
@@ -125,7 +142,13 @@ export function planHasFeature(plan: PlanCode, feature: PlanFeature): boolean {
   return PLANS[plan].features.includes(feature)
 }
 
-export type QuotaMetric = 'active_products' | 'members' | 'storage_bytes' | 'ai_extractions'
+export type QuotaMetric =
+  | 'active_products'
+  /** Produits créés depuis l'ouverture du compte. Ne décroît jamais. */
+  | 'lifetime_products'
+  | 'members'
+  | 'storage_bytes'
+  | 'ai_extractions'
 
 export type QuotaCheck =
   | { allowed: true; remaining: number | null }
@@ -147,10 +170,24 @@ export function checkQuota(plan: PlanCode, metric: QuotaMetric, current: number)
   }
 }
 
+/**
+ * Quotas à vérifier avant de créer un produit.
+ *
+ * Sur l'offre gratuite, les deux plafonds s'appliquent : le nombre de produits
+ * actifs et le nombre total de produits jamais créés.
+ */
+export function productCreationMetrics(plan: PlanCode): QuotaMetric[] {
+  const metrics: QuotaMetric[] = ['active_products']
+  if (PLANS[plan].maxLifetimeProducts !== null) metrics.push('lifetime_products')
+  return metrics
+}
+
 function quotaLimit(plan: PlanDefinition, metric: QuotaMetric): number | null {
   switch (metric) {
     case 'active_products':
       return plan.maxActiveProducts
+    case 'lifetime_products':
+      return plan.maxLifetimeProducts
     case 'members':
       return plan.maxMembers
     case 'storage_bytes':
@@ -161,11 +198,14 @@ function quotaLimit(plan: PlanDefinition, metric: QuotaMetric): number | null {
 }
 
 function quotaMessage(plan: PlanDefinition, metric: QuotaMetric, limit: number): string {
+  const pluriel = limit > 1 ? 's' : ''
   switch (metric) {
     case 'active_products':
-      return `Votre offre ${plan.name} permet ${limit} produit${limit > 1 ? 's' : ''} actif${limit > 1 ? 's' : ''}. Archivez un produit ou passez à une offre supérieure.`
+      return `Votre offre ${plan.name} permet ${limit} produit${pluriel} actif${pluriel}. Archivez un produit ou passez à une offre supérieure.`
+    case 'lifetime_products':
+      return `L’offre ${plan.name} permet de documenter ${limit} produit${pluriel} au total. Ce quota n’est pas renouvelable : passez à une offre supérieure pour en créer d’autres.`
     case 'members':
-      return `Votre offre ${plan.name} permet ${limit} utilisateur${limit > 1 ? 's' : ''}.`
+      return `Votre offre ${plan.name} permet ${limit} utilisateur${pluriel}.`
     case 'storage_bytes':
       return `Votre offre ${plan.name} inclut ${plan.maxStorageMb} Mo de documents.`
     case 'ai_extractions':

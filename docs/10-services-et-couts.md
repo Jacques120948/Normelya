@@ -34,7 +34,10 @@ la présence d'une alternative pour chaque poste.
 | Domaine | ~1 € |
 | **Total** | **≈ 5 à 25 €/mois** |
 
-### 100 clients payants (~1 500 €/mois de revenu)
+### 100 clients payants (~1 200 €/mois de revenu)
+
+Hypothèse de répartition : 60 % Essentiel à 9 €, 30 % Pro à 15 €, 10 % Atelier
+à 25 €, soit environ 1 240 € par mois.
 
 | Poste | Coût mensuel |
 |-------|--------------|
@@ -42,20 +45,28 @@ la présence d'une alternative pour chaque poste.
 | Base / Auth / Stockage | 25 € |
 | Stockage supplémentaire | 5 € |
 | E-mail | 20 € |
-| Stripe (~1 500 € encaissés) | ~48 € |
+| Stripe (~1 240 € encaissés) | ~44 € |
 | IA | 20–40 € |
 | Supervision + analytique | 35 € |
 | Sauvegardes | 5 € |
-| **Total** | **≈ 180 à 200 €/mois**, soit **~12 % du revenu** |
+| **Total** | **≈ 175 à 195 €/mois**, soit **~15 % du revenu** |
 
-### 250 clients (~4 000 €/mois)
+### 250 clients (~3 100 €/mois)
 
-Environ **350 à 450 €/mois**, soit ~10 %.
+Environ **340 à 430 €/mois**, soit ~13 %.
 
-### 500 clients (~8 000 €/mois)
+### 500 clients (~6 200 €/mois)
 
-Environ **700 à 900 €/mois**, soit ~10 %. À ce stade, migrer l'hébergement
+Environ **680 à 870 €/mois**, soit ~13 %. À ce stade, migrer l'hébergement
 applicatif et la base vers des ressources dédiées devient rentable.
+
+### Conséquence de la baisse tarifaire
+
+La grille révisée (9 / 15 / 25 € au lieu de 9,90 / 19,90 / 29,90 €) réduit le
+revenu par client d'environ 20 %. La part des coûts d'infrastructure passe de
+~12 % à ~15 % du revenu, ce qui reste confortable. Le point de vigilance n'est
+pas l'infrastructure mais le **coût de la veille réglementaire**, qui est fixe :
+il faut davantage de clients pour l'amortir. Voir § 10.3.
 
 ## 10.3 Le vrai coût n'est pas l'infrastructure
 

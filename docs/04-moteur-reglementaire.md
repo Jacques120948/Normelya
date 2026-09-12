@@ -26,10 +26,16 @@ type EngineInput = {
     netWeightGrams?: number
     containerCapacityMl?: number
   }
+  /**
+   * Recette complète. Elle peut contenir PLUSIEURS parfums, en plus de la cire,
+   * des colorants et des additifs. Le calcul porte sur le mélange final, jamais
+   * parfum par parfum : deux parfums apportant chacun une même substance
+   * s'additionnent.
+   */
   ingredients: Array<{
     ref: string                  // identifiant stable de l'ingrédient
     role: 'wax' | 'fragrance' | 'dye' | 'additive' | 'other'
-    percent: number              // % masse dans le produit fini
+    percent: number              // % masse dans le produit fini, valeur libre
     sds: {
       sourceRef: string          // id de la version de FDS validée
       validated: true            // le moteur REFUSE une FDS non validée
@@ -54,6 +60,15 @@ type EngineInput = {
 ```ts
 type EngineOutput = {
   engineVersion: string
+  /**
+   * Ce que le moteur a pu faire :
+   *   'complete'         toutes les données nécessaires étaient présentes
+   *   'with_assumption'  une hypothèse explicite a été appliquée
+   *   'review_required'  donnée bloquante manquante, aucun résultat produit
+   */
+  computationState: 'complete' | 'with_assumption' | 'review_required'
+  assumptions: Assumption[]
+  thresholdWarnings: ThresholdProximityWarning[]
   status: 'completed' | 'needs_verification' | 'action_required' | 'not_applicable'
   classifications: Classification[]
   signalWord: 'Danger' | 'Attention' | null
@@ -91,21 +106,62 @@ EngineInput
 EngineOutput
 ```
 
+### Les trois états de sortie
+
+| État | Signification | Résultat produit |
+|------|---------------|------------------|
+| `complete` | Toutes les données nécessaires étaient présentes | oui |
+| `with_assumption` | Une ou plusieurs hypothèses explicites ont été appliquées | oui, accompagné du détail des hypothèses |
+| `review_required` | Une donnée bloquante manque | **non** |
+
+Exemple de donnée bloquante : un facteur M absent sur une substance classée pour
+un danger aigu pour le milieu aquatique catégorie 1. Sans lui, le calcul n'est
+pas possible ; Normelya le dit et n'en produit aucun.
+
+Chaque état est enregistré avec le calcul, dans une colonne distincte du statut
+d'affichage : le premier dit ce que le moteur a pu faire, le second ce que
+l'utilisateur doit faire.
+
 ### Le point critique : les plages de concentration
 
 Une FDS déclare presque toujours des plages (« 5–10 % »). Le moteur ne choisit
-jamais une valeur « raisonnable » au milieu. Il calcule sur le scénario le plus
-défavorable réglementairement (borne haute) **et** signale explicitement quand le
-résultat diffère entre borne basse et borne haute :
+jamais une valeur « raisonnable » au milieu : il retient **la borne haute**,
+affiche l'hypothèse à l'utilisateur et la journalise avec le résultat. L'état de
+calcul passe alors à `with_assumption`.
 
 ```
-ReviewFlag: CONCENTRATION_RANGE_CHANGES_OUTCOME
-« La classification dépend de la concentration exacte de Linalool.
-  Demandez la valeur exacte à votre fournisseur. »
+Assumption: concentration_upper_bound
+  subject     Linalool
+  declared    5 – 10 %
+  applied     10 %
+  explication « Votre fournisseur déclare une plage. Normelya retient la valeur
+                la plus élevée, celle qui est la plus défavorable. Demandez la
+                valeur exacte pour affiner le résultat. »
 ```
 
-C'est une différence de fond avec un tableur : l'incertitude est un résultat, pas
-un angle mort.
+Il n'existe aucune hypothèse implicite dans le moteur : toute hypothèse est
+nommée, affichée et enregistrée.
+
+### Avertissement de proximité de seuil
+
+Toute valeur calculée située à **moins de 10 % sous un seuil de bascule** produit
+un avertissement visible. L'artisan doit savoir qu'un demi-point de parfum en
+plus changerait son étiquette.
+
+```
+ThresholdProximityWarning
+  subject        somme des sensibilisants cutanés
+  computedValue  0,95 %
+  thresholdValue 1 %
+  ruleId         …
+```
+
+Au-delà du seuil, ce n'est plus une proximité mais un résultat : l'avertissement
+disparaît. La fonction `isNearThreshold` de `packages/core` implémente cette
+règle et possède ses propres tests.
+
+C'est une différence de fond avec un tableur : l'incertitude et la fragilité
+d'un résultat sont des sorties du calcul, pas des angles morts.
 
 ## 4.3 Format d'une règle
 

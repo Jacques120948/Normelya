@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { MARKETS, PRODUCT_TYPES, RAW_MATERIAL_CATEGORIES } from './markets'
 import { ORGANIZATION_ROLES } from './identity'
 import { PLAN_CODES } from './plans'
-import { checkRecipeTotal } from './percent'
+import { checkRecipeTotal, sumPercents } from './percent'
 
 /**
  * Schémas de validation partagés.
@@ -129,6 +129,24 @@ export const productSchema = z.object({
 })
 export type ProductInput = z.infer<typeof productSchema>
 
+/**
+ * Taux de parfum.
+ *
+ * Champ numérique libre, jamais une liste de valeurs prédéfinies : l'artisan
+ * saisit son taux réel et le moteur calcule. Les bornes encadrent la saisie,
+ * elles ne constituent pas une règle réglementaire.
+ */
+export const MIN_FRAGRANCE_PERCENT = 0.1
+export const MAX_FRAGRANCE_PERCENT = 30
+
+export const fragrancePercentSchema = z
+  .number()
+  .gte(
+    MIN_FRAGRANCE_PERCENT,
+    `Le taux de parfum doit être d’au moins ${MIN_FRAGRANCE_PERCENT} %.`.replace('.', ','),
+  )
+  .lte(MAX_FRAGRANCE_PERCENT, `Le taux de parfum ne peut pas dépasser ${MAX_FRAGRANCE_PERCENT} %.`)
+
 export const recipeIngredientSchema = z.object({
   rawMaterialId: uuidSchema,
   sdsVersionId: uuidSchema.nullable(),
@@ -139,6 +157,15 @@ export const recipeIngredientSchema = z.object({
   role: z.enum(['wax', 'fragrance', 'dye', 'additive', 'other']),
 })
 
+export type RecipeIngredientInput = z.infer<typeof recipeIngredientSchema>
+
+/**
+ * Recette.
+ *
+ * Une recette peut contenir PLUSIEURS parfums, en plus de la cire, des
+ * colorants et des additifs. Le calcul réglementaire porte sur le mélange final
+ * complet, jamais parfum par parfum.
+ */
 export const recipeSchema = z
   .object({
     ingredients: z.array(recipeIngredientSchema).min(1, 'Ajoutez au moins une matière première.'),
@@ -152,6 +179,20 @@ export const recipeSchema = z
         message: 'Une même matière première ne peut être ajoutée qu’une seule fois.',
       })
     }
+
+    // Bornes de saisie appliquées à chaque parfum pris séparément.
+    value.ingredients.forEach((ingredient, index) => {
+      if (ingredient.role !== 'fragrance') return
+      const verdict = fragrancePercentSchema.safeParse(ingredient.percent)
+      if (!verdict.success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['ingredients', index, 'percent'],
+          message: verdict.error.issues[0]?.message ?? 'Taux de parfum invalide.',
+        })
+      }
+    })
+
     const check = checkRecipeTotal(value.ingredients.map((ingredient) => ingredient.percent))
     if (!check.valid) {
       ctx.addIssue({
@@ -162,6 +203,15 @@ export const recipeSchema = z
     }
   })
 export type RecipeInput = z.infer<typeof recipeSchema>
+
+/** Taux de parfum cumulé d'une recette, tous parfums confondus. */
+export function totalFragranceLoad(
+  ingredients: readonly { role: string; percent: number }[],
+): number {
+  return sumPercents(
+    ingredients.filter((i) => i.role === 'fragrance').map((i) => i.percent),
+  )
+}
 
 export const subscriptionChangeSchema = z.object({
   plan: z.enum(PLAN_CODES),

@@ -24,7 +24,7 @@ parallèle ; la mise en vente, non.
 | 6 | Résultats, étiquettes | à venir |
 | 7 | PDF, documents, historique | à venir |
 | 8 | Stripe, plans, quotas | à venir |
-| 9 | Landing page, SEO, pages légales | à venir |
+| 9 | Landing page, SEO, pages légales | 🚧 structure des pages légales préparée |
 | 10 | Sécurité, tests, audit | à venir |
 | 11 | Production, supervision, sauvegardes | à venir |
 
@@ -75,6 +75,15 @@ Création guidée, versions, recettes, contrôle du total, verrouillage à l'ana
 Aucune écriture dans `packages/regulatory-engine` sans validation humaine
 préalable. Le paquet reste volontairement vide.
 
+Premier travail à mener une fois le point d'arrêt levé : le **jeu de tests de
+référence** décrit dans [`15-jeu-de-tests-reference.md`](./15-jeu-de-tests-reference.md).
+Il précède toute implémentation de règle. Si le moteur ne reproduit pas à 100 %
+la classification du fournisseur sur le parfum pur, la sommation est fausse et le
+développement s'arrête.
+
+Module `SwitzerlandCompliance` séparé dès cette phase, sans aucune constante
+partagée avec le module européen.
+
 Sources, règles, calculateurs, seuils, UFI, traçabilité, tests exhaustifs,
 publication de la première version de moteur. **Dépend des validations humaines.**
 
@@ -89,8 +98,15 @@ Export PDF, dossier produit, historique, rattachement des sources.
 Stripe Checkout, portail client, webhooks idempotents, quotas serveur, plans.
 
 ### Phase 9 — Acquisition
-Landing page, pages « comment ça marche », pages SEO utiles, mentions légales,
-CGU, CGV, politique de confidentialité.
+Landing page, pages « comment ça marche », pages SEO utiles.
+
+Les pages légales existent déjà sous forme de **plan** : sections attendues et
+points à couvrir, marqués `DEMO_JURIDIQUE` à l'écran comme dans le code. Le texte
+définitif sera rédigé par un juriste avant toute mise en vente. Points déjà
+prévus dans la structure : service réservé aux professionnels, responsabilité de
+mise sur le marché incombant à l'utilisateur, plafonnement de responsabilité,
+absence de garantie quant au caractère suffisant des résultats, engagement de
+non-utilisation des formulations clients.
 
 ### Phase 10 — Durcissement
 Tests E2E, tests RLS, tests d'upload, tests Stripe, tests PDF, revue de sécurité,

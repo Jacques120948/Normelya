@@ -5,6 +5,7 @@ import {
   passwordSchema,
   recipeSchema,
   signUpSchema,
+  totalFragranceLoad,
   uploadMetadataSchema,
 } from '../src/schemas'
 
@@ -137,5 +138,68 @@ describe('dépôt de fichier', () => {
         byteSize: MAX_UPLOAD_BYTES + 1,
       }).success,
     ).toBe(false)
+  })
+})
+
+describe('taux de parfum', () => {
+  const parfum = (percent: number) => ({
+    rawMaterialId: uuid(2),
+    sdsVersionId: null,
+    percent,
+    role: 'fragrance' as const,
+  })
+  const cire = (percent: number) => ({
+    rawMaterialId: uuid(1),
+    sdsVersionId: null,
+    percent,
+    role: 'wax' as const,
+  })
+
+  it('accepte n’importe quelle valeur entre 0,1 et 30 %, pas seulement des paliers', () => {
+    for (const taux of [0.1, 3, 6.5, 7.3, 9.9, 12.75, 30]) {
+      const resultat = recipeSchema.safeParse({
+        ingredients: [cire(100 - taux), parfum(taux)],
+      })
+      expect(resultat.success, `taux ${taux} refusé`).toBe(true)
+    }
+  })
+
+  it('refuse un taux de parfum sous 0,1 % ou au-delà de 30 %', () => {
+    const trop_bas = recipeSchema.safeParse({ ingredients: [cire(99.95), parfum(0.05)] })
+    expect(trop_bas.success).toBe(false)
+
+    const trop_haut = recipeSchema.safeParse({ ingredients: [cire(65), parfum(35)] })
+    expect(trop_haut.success).toBe(false)
+    if (trop_haut.success) throw new Error('inattendu')
+    expect(trop_haut.error.issues.some((i) => i.message.includes('30 %'))).toBe(true)
+  })
+
+  it('n’applique ces bornes qu’aux parfums', () => {
+    // Une cire à 99,9 % est parfaitement normale.
+    const resultat = recipeSchema.safeParse({ ingredients: [cire(99.9), parfum(0.1)] })
+    expect(resultat.success).toBe(true)
+  })
+
+  it('accepte plusieurs parfums dans une même recette', () => {
+    const resultat = recipeSchema.safeParse({
+      ingredients: [
+        cire(88),
+        parfum(7),
+        { rawMaterialId: uuid(3), sdsVersionId: null, percent: 4, role: 'fragrance' as const },
+        { rawMaterialId: uuid(4), sdsVersionId: null, percent: 1, role: 'dye' as const },
+      ],
+    })
+    expect(resultat.success).toBe(true)
+  })
+
+  it('calcule le taux de parfum cumulé, tous parfums confondus', () => {
+    expect(
+      totalFragranceLoad([
+        { role: 'wax', percent: 88 },
+        { role: 'fragrance', percent: 7 },
+        { role: 'fragrance', percent: 4 },
+        { role: 'dye', percent: 1 },
+      ]),
+    ).toBe(11)
   })
 })

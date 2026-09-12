@@ -19,6 +19,7 @@ l'écriture du code applicatif, conformément à la demande initiale.
 | 12 | [`12-roadmap-mvp.md`](./12-roadmap-mvp.md) | Feuille de route MVP commercialisable |
 | 13 | [`13-differenciation.md`](./13-differenciation.md) | Différenciation par rapport aux solutions existantes |
 | 14 | [`14-recommandations.md`](./14-recommandations.md) | Recommandations avant développement, décisions à trancher |
+| 15 | [`15-jeu-de-tests-reference.md`](./15-jeu-de-tests-reference.md) | Jeu de tests de référence du moteur, à écrire avant toute règle |
 
 Les décisions structurantes sont consignées sous forme d'ADR dans [`adr/`](./adr/).
 
